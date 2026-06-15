@@ -1,6 +1,7 @@
 // ─── CPA Exam Section Types ───────────────────────────────────────────────
 
 export type CPASection = 'FAR' | 'AUD' | 'REG' | 'BAR' | 'TCP' | 'ISC';
+export type DisciplineSection = 'BAR' | 'TCP' | 'ISC';
 
 export type ContentType = 'mcq' | 'tbs' | 'flashcard' | 'notes' | 'glossary';
 
@@ -83,6 +84,21 @@ export interface BlindSpot {
   lastAttempted?: string;
 }
 
+// ─── Quiz Session ──────────────────────────────────────────────────────────
+
+export interface QuizSession {
+  id: string;
+  title: string;
+  description: string;
+  unitId: string;
+  mcqIds: string[];
+  timeLimit?: number;
+  mode: 'study' | 'exam';
+  difficulty: 'easy' | 'medium' | 'hard' | 'mixed';
+  completedAt?: string;
+  score?: number;
+}
+
 // ─── Module & Unit Structure ───────────────────────────────────────────────
 
 export interface ModuleMetrics {
@@ -121,6 +137,10 @@ export interface Unit {
   totalProgress: number;
   isActive: boolean;
   lastStudied?: string;
+  // Unit-level aggregated content
+  allMcqs: MCQ[];
+  allFlashcards: Flashcard[];
+  quizSessions: QuizSession[];
 }
 
 export interface SectionProgress {
@@ -188,6 +208,7 @@ export interface AppState {
   activeTab: WorkspaceTab;
   activeUnit?: string;
   activeModule?: string;
+  activeQuizSession?: string;
   showGenerateModal: boolean;
   generateConfig: GenerateConfig;
   isDarkMode: boolean;

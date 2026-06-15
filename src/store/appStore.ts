@@ -19,6 +19,7 @@ interface AppActions {
   setActiveTab: (tab: WorkspaceTab) => void;
   setActiveUnit: (unitId: string | undefined) => void;
   setActiveModule: (moduleId: string | undefined) => void;
+  setActiveQuizSession: (sessionId: string | undefined) => void;
   openGenerateModal: () => void;
   closeGenerateModal: () => void;
   toggleContentType: (type: GenerateConfig['contentTypes'][number]) => void;
@@ -37,6 +38,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   activeTab: 'dashboard',
   activeUnit: 'far-f1',
   activeModule: 'far-f1-m1',
+  activeQuizSession: undefined,
   showGenerateModal: false,
   generateConfig: defaultGenerateConfig,
   isDarkMode: false,
@@ -44,17 +46,21 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   sectionProgress: initialSectionProgress,
 
   setActiveSection: (section) =>
-    set((state) => ({
+    set(() => ({
       activeSection: section,
       activeUnit: undefined,
       activeModule: undefined,
+      activeQuizSession: undefined,
     })),
 
   setActiveTab: (tab) => set({ activeTab: tab }),
 
-  setActiveUnit: (unitId) => set({ activeUnit: unitId, activeModule: undefined }),
+  setActiveUnit: (unitId) =>
+    set({ activeUnit: unitId, activeModule: undefined, activeQuizSession: undefined }),
 
   setActiveModule: (moduleId) => set({ activeModule: moduleId }),
+
+  setActiveQuizSession: (sessionId) => set({ activeQuizSession: sessionId }),
 
   openGenerateModal: () => set({ showGenerateModal: true }),
 
@@ -75,19 +81,13 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
     }),
 
   setMode: (mode) =>
-    set((state) => ({
-      generateConfig: { ...state.generateConfig, mode },
-    })),
+    set((state) => ({ generateConfig: { ...state.generateConfig, mode } })),
 
   setDifficulty: (difficulty) =>
-    set((state) => ({
-      generateConfig: { ...state.generateConfig, difficulty },
-    })),
+    set((state) => ({ generateConfig: { ...state.generateConfig, difficulty } })),
 
   setQuestionCount: (count) =>
-    set((state) => ({
-      generateConfig: { ...state.generateConfig, questionCount: count },
-    })),
+    set((state) => ({ generateConfig: { ...state.generateConfig, questionCount: count } })),
 
   toggleFocusBlindSpots: () =>
     set((state) => ({
@@ -106,9 +106,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
     })),
 
   setTimeLimit: (limit) =>
-    set((state) => ({
-      generateConfig: { ...state.generateConfig, timeLimit: limit },
-    })),
+    set((state) => ({ generateConfig: { ...state.generateConfig, timeLimit: limit } })),
 
   toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
 
