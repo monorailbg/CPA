@@ -3,42 +3,32 @@
 import { useState } from 'react';
 import { Network, ZoomIn, ZoomOut, RefreshCw, Info } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
+import { useTheme } from '@/lib/useTheme';
 
 interface GraphNode {
   id: string;
   label: string;
   x: number;
   y: number;
-  color: string;
-  bg: string;
-  border: string;
+  tokenKey: 'mcq' | 'notes' | 'flash' | 'tbs' | 'glossary';
   size: 'sm' | 'md' | 'lg';
-  section?: string;
 }
-
-interface GraphEdge {
-  id: string;
-  from: string;
-  to: string;
-  label: string;
-  dashed?: boolean;
-}
+interface GraphEdge { id: string; from: string; to: string; label: string; dashed?: boolean }
 
 const FAR_NODES: GraphNode[] = [
-  { id: 'bs', label: 'Balance Sheet', x: 400, y: 200, color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe', size: 'lg' },
-  { id: 'is', label: 'Income Statement', x: 200, y: 100, color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe', size: 'lg' },
-  { id: 'cfs', label: 'Cash Flow Statement', x: 600, y: 100, color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe', size: 'lg' },
-  { id: 'se', label: "Stmt of Stockholders' Equity", x: 400, y: 380, color: '#15803d', bg: '#f0fdf4', border: '#bbf7d0', size: 'md' },
-  { id: 'rev', label: 'Revenue (ASC 606)', x: 80, y: 200, color: '#15803d', bg: '#f0fdf4', border: '#bbf7d0', size: 'md' },
-  { id: 'cogs', label: 'COGS & Inventory', x: 180, y: 300, color: '#b45309', bg: '#fffbeb', border: '#fde68a', size: 'md' },
-  { id: 'ppe', label: 'PP&E & Depreciation', x: 550, y: 320, color: '#b45309', bg: '#fffbeb', border: '#fde68a', size: 'md' },
-  { id: 'lease', label: 'Leases (ASC 842)', x: 700, y: 280, color: '#4338ca', bg: '#eef2ff', border: '#c7d2fe', size: 'sm' },
-  { id: 'tax', label: 'Income Taxes (ASC 740)', x: 300, y: 460, color: '#4338ca', bg: '#eef2ff', border: '#c7d2fe', size: 'sm' },
-  { id: 'invest', label: 'Investments (ASC 320)', x: 100, y: 400, color: '#6b21a8', bg: '#faf5ff', border: '#e9d5ff', size: 'sm' },
-  { id: 'fv', label: 'Fair Value (ASC 820)', x: 650, y: 420, color: '#6b21a8', bg: '#faf5ff', border: '#e9d5ff', size: 'sm' },
-  { id: 'oci', label: 'OCI / AOCI', x: 280, y: 160, color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc', size: 'sm' },
+  { id: 'bs', label: 'Balance Sheet', x: 400, y: 200, tokenKey: 'mcq', size: 'lg' },
+  { id: 'is', label: 'Income Statement', x: 200, y: 100, tokenKey: 'mcq', size: 'lg' },
+  { id: 'cfs', label: 'Cash Flow Statement', x: 600, y: 100, tokenKey: 'mcq', size: 'lg' },
+  { id: 'se', label: "Stmt of SE", x: 400, y: 380, tokenKey: 'notes', size: 'md' },
+  { id: 'rev', label: 'Revenue (ASC 606)', x: 80, y: 200, tokenKey: 'notes', size: 'md' },
+  { id: 'cogs', label: 'COGS & Inventory', x: 180, y: 300, tokenKey: 'tbs', size: 'md' },
+  { id: 'ppe', label: 'PP&E & Depreciation', x: 550, y: 320, tokenKey: 'tbs', size: 'md' },
+  { id: 'lease', label: 'Leases (ASC 842)', x: 700, y: 280, tokenKey: 'flash', size: 'sm' },
+  { id: 'tax', label: 'Income Taxes (ASC 740)', x: 300, y: 460, tokenKey: 'flash', size: 'sm' },
+  { id: 'invest', label: 'Investments (ASC 320)', x: 100, y: 400, tokenKey: 'glossary', size: 'sm' },
+  { id: 'fv', label: 'Fair Value (ASC 820)', x: 650, y: 420, tokenKey: 'glossary', size: 'sm' },
+  { id: 'oci', label: 'OCI / AOCI', x: 280, y: 160, tokenKey: 'notes', size: 'sm' },
 ];
-
 const FAR_EDGES: GraphEdge[] = [
   { id: 'e1', from: 'is', to: 'bs', label: 'Net income → RE' },
   { id: 'e2', from: 'cfs', to: 'bs', label: 'Cash balance' },
@@ -58,16 +48,15 @@ const FAR_EDGES: GraphEdge[] = [
 ];
 
 const AUD_NODES: GraphNode[] = [
-  { id: 'audit-risk', label: 'Audit Risk', x: 400, y: 200, color: '#6b21a8', bg: '#faf5ff', border: '#e9d5ff', size: 'lg' },
-  { id: 'ir', label: 'Inherent Risk', x: 200, y: 100, color: '#4338ca', bg: '#eef2ff', border: '#c7d2fe', size: 'md' },
-  { id: 'cr', label: 'Control Risk', x: 400, y: 80, color: '#4338ca', bg: '#eef2ff', border: '#c7d2fe', size: 'md' },
-  { id: 'dr', label: 'Detection Risk', x: 600, y: 100, color: '#4338ca', bg: '#eef2ff', border: '#c7d2fe', size: 'md' },
-  { id: 'mat', label: 'Materiality', x: 200, y: 320, color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe', size: 'md' },
-  { id: 'proc', label: 'Audit Procedures', x: 600, y: 300, color: '#15803d', bg: '#f0fdf4', border: '#bbf7d0', size: 'md' },
-  { id: 'opinion', label: 'Audit Opinion', x: 400, y: 380, color: '#b45309', bg: '#fffbeb', border: '#fde68a', size: 'lg' },
-  { id: 'ic', label: 'Internal Controls', x: 650, y: 200, color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc', size: 'sm' },
+  { id: 'audit-risk', label: 'Audit Risk', x: 400, y: 200, tokenKey: 'glossary', size: 'lg' },
+  { id: 'ir', label: 'Inherent Risk', x: 200, y: 100, tokenKey: 'flash', size: 'md' },
+  { id: 'cr', label: 'Control Risk', x: 400, y: 80, tokenKey: 'flash', size: 'md' },
+  { id: 'dr', label: 'Detection Risk', x: 600, y: 100, tokenKey: 'flash', size: 'md' },
+  { id: 'mat', label: 'Materiality', x: 200, y: 320, tokenKey: 'mcq', size: 'md' },
+  { id: 'proc', label: 'Audit Procedures', x: 600, y: 300, tokenKey: 'notes', size: 'md' },
+  { id: 'opinion', label: 'Audit Opinion', x: 400, y: 380, tokenKey: 'tbs', size: 'lg' },
+  { id: 'ic', label: 'Internal Controls', x: 650, y: 200, tokenKey: 'mcq', size: 'sm' },
 ];
-
 const AUD_EDGES: GraphEdge[] = [
   { id: 'ae1', from: 'ir', to: 'audit-risk', label: '×' },
   { id: 'ae2', from: 'cr', to: 'audit-risk', label: '×' },
@@ -79,126 +68,106 @@ const AUD_EDGES: GraphEdge[] = [
   { id: 'ae8', from: 'mat', to: 'opinion', label: 'Informs' },
 ];
 
+const SIZE_PROPS = {
+  lg: { w: 140, h: 46, fontSize: 11, fontWeight: 700 },
+  md: { w: 130, h: 40, fontSize: 10, fontWeight: 600 },
+  sm: { w: 120, h: 36, fontSize: 10, fontWeight: 500 },
+};
+
 export default function GraphView() {
   const { activeSection } = useAppStore();
+  const t = useTheme();
   const [scale, setScale] = useState(1);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
   const nodes = activeSection === 'AUD' ? AUD_NODES : FAR_NODES;
   const edges = activeSection === 'AUD' ? AUD_EDGES : FAR_EDGES;
-
   const getNodeById = (id: string) => nodes.find((n) => n.id === id);
 
-  const getSizeProps = (size: GraphNode['size']) => {
-    switch (size) {
-      case 'lg': return { w: 140, h: 48, fontSize: 12, fontWeight: 700 };
-      case 'md': return { w: 130, h: 42, fontSize: 11, fontWeight: 600 };
-      case 'sm': return { w: 120, h: 38, fontSize: 10, fontWeight: 500 };
-    }
-  };
-
-  const svgWidth = 800;
-  const svgHeight = 520;
+  const edgeColor = t.isDark ? '#334155' : '#cbd5e1';
+  const edgeDashedColor = t.isDark ? '#1e293b' : '#e2e8f0';
 
   return (
     <div className="p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-slate-900">
-            <Network size={16} className="text-white" />
+          <div
+            className="p-2.5 rounded-xl"
+            style={{ backgroundColor: t.isDark ? '#1e293b' : '#0f172a', border: t.isDark ? '1px solid #334155' : 'none', boxShadow: t.isDark ? '0 0 12px rgba(34,211,238,0.12)' : 'none' }}
+          >
+            <Network size={16} style={{ color: t.isDark ? '#22d3ee' : '#ffffff' }} />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-900">Knowledge Dependency Graph</h1>
-            <p className="text-sm text-slate-400">
-              {activeSection} · Concept relationship mapping
-            </p>
+            <h1 className="text-lg font-bold" style={{ color: t.textPrimary }}>Knowledge Dependency Graph</h1>
+            <p className="text-sm" style={{ color: t.textTertiary }}>{activeSection} · Concept relationship mapping</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setScale(Math.min(scale + 0.1, 2))}
-            className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
-          >
-            <ZoomIn size={14} />
-          </button>
-          <button
-            onClick={() => setScale(Math.max(scale - 0.1, 0.5))}
-            className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
-          >
-            <ZoomOut size={14} />
-          </button>
-          <button
-            onClick={() => { setScale(1); setSelectedNode(null); }}
-            className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
-          >
-            <RefreshCw size={14} />
-          </button>
+          {[
+            { icon: ZoomIn, action: () => setScale(Math.min(scale + 0.1, 2)) },
+            { icon: ZoomOut, action: () => setScale(Math.max(scale - 0.1, 0.5)) },
+            { icon: RefreshCw, action: () => { setScale(1); setSelectedNode(null); } },
+          ].map(({ icon: Icon, action }, i) => (
+            <button
+              key={i}
+              onClick={action}
+              className="p-2 rounded-lg transition-colors"
+              style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}`, color: t.textTertiary }}
+            >
+              <Icon size={14} />
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Graph container */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden">
+      {/* Graph */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow }}
+      >
         <div className="overflow-auto" style={{ maxHeight: '540px' }}>
-          <svg
-            width={svgWidth}
-            height={svgHeight}
-            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-            className="w-full"
-            style={{ minWidth: '600px' }}
-          >
+          <svg width={800} height={520} viewBox="0 0 800 520" className="w-full" style={{ minWidth: '600px' }}>
             <defs>
-              <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
-                <polygon points="0 0, 8 3, 0 6" fill="#94a3b8" />
+              <marker id="arr" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill={edgeColor} />
               </marker>
-              <marker id="arrowhead-dashed" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
-                <polygon points="0 0, 8 3, 0 6" fill="#cbd5e1" />
+              <marker id="arr-d" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill={edgeDashedColor} />
               </marker>
             </defs>
 
-            {/* Grid background */}
+            {/* Grid */}
             <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-              <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#f1f5f9" strokeWidth="0.5" />
+              <path d="M 30 0 L 0 0 0 30" fill="none" stroke={t.isDark ? '#0f172a' : '#f8fafc'} strokeWidth="0.5" />
             </pattern>
             <rect width="100%" height="100%" fill="url(#grid)" />
 
             {/* Edges */}
             {edges.map((edge) => {
-              const fromNode = getNodeById(edge.from);
-              const toNode = getNodeById(edge.to);
-              if (!fromNode || !toNode) return null;
-
-              const fromProps = getSizeProps(fromNode.size);
-              const toProps = getSizeProps(toNode.size);
-
-              const x1 = fromNode.x + fromProps.w / 2;
-              const y1 = fromNode.y + fromProps.h / 2;
-              const x2 = toNode.x + toProps.w / 2;
-              const y2 = toNode.y + toProps.h / 2;
-
-              const midX = (x1 + x2) / 2;
-              const midY = (y1 + y2) / 2;
-
-              const isHighlighted = selectedNode && (selectedNode.id === edge.from || selectedNode.id === edge.to);
+              const fn = getNodeById(edge.from);
+              const tn = getNodeById(edge.to);
+              if (!fn || !tn) return null;
+              const fp = SIZE_PROPS[fn.size];
+              const tp = SIZE_PROPS[tn.size];
+              const x1 = fn.x + fp.w / 2, y1 = fn.y + fp.h / 2;
+              const x2 = tn.x + tp.w / 2, y2 = tn.y + tp.h / 2;
+              const midX = (x1 + x2) / 2, midY = (y1 + y2) / 2;
+              const isHl = selectedNode && (selectedNode.id === edge.from || selectedNode.id === edge.to);
+              const hlColor = t.isDark ? '#22d3ee' : '#0f172a';
 
               return (
                 <g key={edge.id}>
                   <line
                     x1={x1} y1={y1} x2={x2} y2={y2}
-                    stroke={isHighlighted ? '#0f172a' : edge.dashed ? '#e2e8f0' : '#cbd5e1'}
-                    strokeWidth={isHighlighted ? 2 : 1}
+                    stroke={isHl ? hlColor : edge.dashed ? edgeDashedColor : edgeColor}
+                    strokeWidth={isHl ? 2 : 1}
                     strokeDasharray={edge.dashed ? '4,3' : undefined}
-                    markerEnd={`url(#arrowhead${edge.dashed ? '-dashed' : ''})`}
-                    className="transition-all duration-200"
+                    markerEnd={`url(#arr${edge.dashed ? '-d' : ''})`}
+                    style={{ filter: isHl && t.isDark ? `drop-shadow(0 0 4px ${hlColor}80)` : 'none' }}
                   />
-                  {isHighlighted && (
-                    <text
-                      x={midX} y={midY - 4}
-                      textAnchor="middle"
-                      fontSize="9"
-                      fill="#64748b"
-                      fontWeight="500"
-                    >
+                  {isHl && (
+                    <text x={midX} y={midY - 4} textAnchor="middle" fontSize="9" fill={t.isDark ? '#94a3b8' : '#64748b'} fontWeight="500">
                       {edge.label}
                     </text>
                   )}
@@ -208,7 +177,8 @@ export default function GraphView() {
 
             {/* Nodes */}
             {nodes.map((node) => {
-              const props = getSizeProps(node.size);
+              const props = SIZE_PROPS[node.size];
+              const token = t[node.tokenKey];
               const isSelected = selectedNode?.id === node.id;
 
               return (
@@ -218,24 +188,29 @@ export default function GraphView() {
                   onClick={() => setSelectedNode(isSelected ? null : node)}
                   className="cursor-pointer"
                 >
+                  {isSelected && t.isDark && (
+                    <rect
+                      width={props.w + 4} height={props.h + 4} x={-2} y={-2}
+                      rx={10} fill="none"
+                      stroke={token.border}
+                      strokeWidth="1.5"
+                      style={{ filter: `drop-shadow(0 0 6px ${token.border})` }}
+                    />
+                  )}
                   <rect
-                    width={props.w}
-                    height={props.h}
-                    rx={8}
-                    fill={isSelected ? '#0f172a' : node.bg}
-                    stroke={isSelected ? '#0f172a' : node.border}
-                    strokeWidth={isSelected ? 0 : 1.5}
-                    className="transition-all duration-200 drop-shadow-sm"
+                    width={props.w} height={props.h} rx={8}
+                    fill={isSelected ? (t.isDark ? '#0f172a' : '#0f172a') : token.bg}
+                    stroke={isSelected ? (t.isDark ? token.border : '#0f172a') : token.border}
+                    strokeWidth={1.5}
+                    style={{ filter: isSelected && t.isDark ? `drop-shadow(0 0 8px ${token.border}60)` : 'none' }}
                   />
                   <text
-                    x={props.w / 2}
-                    y={props.h / 2 + 1}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fontSize={props.fontSize}
-                    fontWeight={props.fontWeight}
-                    fill={isSelected ? '#ffffff' : node.color}
+                    x={props.w / 2} y={props.h / 2 + 1}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fontSize={props.fontSize} fontWeight={props.fontWeight}
+                    fill={isSelected ? (t.isDark ? token.text : '#ffffff') : token.text}
                     className="select-none"
+                    style={{ textShadow: t.isDark && isSelected ? `0 0 8px ${token.text}` : 'none' }}
                   >
                     {node.label.length > 16 ? node.label.slice(0, 16) + '…' : node.label}
                   </text>
@@ -248,59 +223,57 @@ export default function GraphView() {
 
       {/* Selected node info */}
       {selectedNode && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] flex items-start gap-3">
+        <div
+          className="rounded-2xl p-4 flex items-start gap-3"
+          style={{ backgroundColor: t.card, border: `1px solid ${t.isDark ? t[selectedNode.tokenKey].border : t.cardBorder}`, boxShadow: t.isDark ? `0 0 15px ${t[selectedNode.tokenKey].border}20` : t.cardShadow }}
+        >
           <div
             className="p-2 rounded-lg flex-shrink-0"
-            style={{ backgroundColor: selectedNode.bg, border: `1px solid ${selectedNode.border}` }}
+            style={{ backgroundColor: t[selectedNode.tokenKey].bg, border: `1px solid ${t[selectedNode.tokenKey].border}` }}
           >
-            <Info size={14} style={{ color: selectedNode.color }} />
+            <Info size={14} style={{ color: t[selectedNode.tokenKey].text }} />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">{selectedNode.label}</h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Connected to: {' '}
-              {edges
-                .filter((e) => e.from === selectedNode.id || e.to === selectedNode.id)
-                .map((e) => {
-                  const otherId = e.from === selectedNode.id ? e.to : e.from;
-                  const other = getNodeById(otherId);
-                  return other?.label;
-                })
-                .filter(Boolean)
-                .join(', ')
-              }
+            <h3 className="text-sm font-semibold" style={{ color: t.textPrimary }}>{selectedNode.label}</h3>
+            <p className="text-xs mt-0.5" style={{ color: t.textTertiary }}>
+              Connected to: {edges.filter((e) => e.from === selectedNode.id || e.to === selectedNode.id).map((e) => {
+                const otherId = e.from === selectedNode.id ? e.to : e.from;
+                return getNodeById(otherId)?.label;
+              }).filter(Boolean).join(', ')}
             </p>
           </div>
         </div>
       )}
 
       {/* Legend */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
-        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Legend</h3>
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow }}
+      >
+        <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: t.textTertiary }}>Legend</h3>
         <div className="flex flex-wrap gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-0.5 bg-slate-400" />
-            <span className="text-xs text-slate-500">Direct dependency</span>
+            <div className="w-8 h-0.5" style={{ backgroundColor: edgeColor }} />
+            <span className="text-xs" style={{ color: t.textTertiary }}>Direct dependency</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-0.5 border-t border-dashed border-slate-400" />
-            <span className="text-xs text-slate-500">Indirect relationship</span>
+            <div className="w-8 h-0.5 border-t border-dashed" style={{ borderColor: edgeDashedColor }} />
+            <span className="text-xs" style={{ color: t.textTertiary }}>Indirect relationship</span>
           </div>
-          {[
-            { label: 'Financial Statements', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
-            { label: 'Accounts / Transactions', bg: '#fffbeb', border: '#fde68a', color: '#b45309' },
-            { label: 'Standards / Rules', bg: '#eef2ff', border: '#c7d2fe', color: '#4338ca' },
-            { label: 'Concepts', bg: '#faf5ff', border: '#e9d5ff', color: '#6b21a8' },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs"
-              style={{ backgroundColor: item.bg, borderColor: item.border, color: item.color }}
-            >
-              <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: item.color }} />
-              {item.label}
-            </div>
-          ))}
+          {(['mcq', 'tbs', 'flash', 'glossary'] as const).map((key) => {
+            const labels = { mcq: 'Financial Statements', tbs: 'Accounts', flash: 'Standards', glossary: 'Concepts' };
+            const tok = t[key];
+            return (
+              <div
+                key={key}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs"
+                style={{ backgroundColor: tok.bg, borderColor: tok.border, color: tok.text }}
+              >
+                <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: tok.text, boxShadow: t.isDark ? `0 0 4px ${tok.text}` : 'none' }} />
+                {labels[key]}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
