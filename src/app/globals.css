@@ -2,22 +2,22 @@
 
 /* ── Light mode tokens ───────────────────────────────────────────────────── */
 :root {
-  --canvas: #faf8f5;
-  --card: #ffffff;
-  --card-border: #eaddcd;
+  --canvas: #f6f3ea;
+  --card: #fafaf7;
+  --card-border: #e6dfd3;
   --card-shadow: none;
-  --card-hover-shadow: 0 2px 8px rgba(120, 95, 60, 0.06);
-  --text-primary: #2b2622;
-  --text-secondary: #6b6258;
-  --text-tertiary: #a39a8c;
-  --nav-bg: rgba(250, 248, 245, 0.95);
-  --nav-border: #eaddcd;
-  --sidebar-bg: #ffffff;
-  --sidebar-border: #eaddcd;
-  --input-bg: #faf8f5;
-  --input-border: #eaddcd;
-  --divider: #f1ebe2;
-  --surface: #f4f1ea;
+  --card-hover-shadow: 0 6px 16px rgba(90, 70, 40, 0.07);
+  --text-primary: #1c1917;
+  --text-secondary: #6b665b;
+  --text-tertiary: #9c9686;
+  --nav-bg: rgba(246, 243, 234, 0.95);
+  --nav-border: #e6dfd3;
+  --sidebar-bg: #fafaf7;
+  --sidebar-border: #e6dfd3;
+  --input-bg: #f6f3ea;
+  --input-border: #e6dfd3;
+  --divider: #eee8dc;
+  --surface: #f1ebdd;
 }
 
 /* ── Dark mode (Cyber-Obsidian) tokens ───────────────────────────────────── */
@@ -138,6 +138,10 @@ input:focus-visible {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.spring-transition {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ── Dark mode glow animations ───────────────────────────────────────────── */

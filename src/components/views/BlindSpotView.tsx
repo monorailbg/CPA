@@ -44,7 +44,7 @@ function GapBar({ label, value, color, track, isDark }: { label: string; value: 
         <span>{label}</span>
         <span className="font-medium" style={{ color: isDark ? '#cbd5e1' : '#475569' }}>{value}%</span>
       </div>
-      <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#0f172a' : '#f1f5f9' }}>
+      <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#0f172a' : '#f1ebdd' }}>
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{
@@ -138,7 +138,7 @@ function BlindSpotCard({ spot, rank }: { spot: BlindSpot & { unitCode: string };
         <div className="mt-4 flex gap-2">
           <button
             className="flex-1 py-2 px-3 rounded-xl text-xs font-medium transition-colors"
-            style={{ backgroundColor: t.isDark ? '#0f172a' : '#f8fafc', color: t.textSecondary, border: `1px solid ${t.isDark ? '#334155' : '#e2e8f0'}` }}
+            style={{ backgroundColor: t.isDark ? '#0f172a' : t.muted, color: t.textSecondary, border: `1px solid ${t.isDark ? '#334155' : t.mutedBorder}` }}
           >
             Practice MCQs
           </button>
@@ -147,7 +147,7 @@ function BlindSpotCard({ spot, rank }: { spot: BlindSpot & { unitCode: string };
             style={{
               backgroundColor: config.text,
               boxShadow: t.isDark ? `0 0 12px ${config.text}40` : 'none',
-              color: t.isDark ? '#020617' : '#ffffff',
+              color: t.isDark ? '#020617' : t.card,
             }}
           >
             Review Notes
@@ -185,9 +185,9 @@ export default function BlindSpotView() {
       <div className="flex items-center gap-3">
         <div
           className="p-2.5 rounded-xl"
-          style={{ backgroundColor: t.isDark ? '#1e293b' : '#0f172a', border: t.isDark ? '1px solid #334155' : 'none', boxShadow: t.isDark ? '0 0 12px rgba(248,113,113,0.12)' : 'none' }}
+          style={{ backgroundColor: t.isDark ? '#1e293b' : '#fef2f2', border: t.isDark ? '1px solid #334155' : '1px solid #fecaca', boxShadow: t.isDark ? '0 0 12px rgba(248,113,113,0.12)' : 'none' }}
         >
-          <Brain size={16} style={{ color: t.isDark ? '#f87171' : '#ffffff' }} />
+          <Brain size={16} style={{ color: t.isDark ? '#f87171' : '#dc2626' }} />
         </div>
         <div>
           <h1 className="text-lg font-bold" style={{ color: t.textPrimary }}>Blind Spot Detective</h1>
@@ -208,7 +208,7 @@ export default function BlindSpotView() {
           <button
             onClick={() => setActiveTab('quiz')}
             className="mt-4 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-            style={{ backgroundColor: t.isDark ? '#1e293b' : '#0f172a', color: t.isDark ? '#22d3ee' : '#ffffff', border: t.isDark ? '1px solid #22d3ee40' : 'none' }}
+            style={{ backgroundColor: t.isDark ? '#1e293b' : t.navActiveBg, color: t.isDark ? '#22d3ee' : t.navActiveText, border: t.isDark ? '1px solid #22d3ee40' : 'none' }}
           >
             Start Practicing
           </button>
@@ -278,8 +278,8 @@ export default function BlindSpotView() {
                   <div
                     className="w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5"
                     style={{
-                      backgroundColor: t.isDark ? '#1e293b' : '#0f172a',
-                      color: t.isDark ? '#22d3ee' : '#ffffff',
+                      backgroundColor: t.isDark ? '#1e293b' : t.navActiveBg,
+                      color: t.isDark ? '#22d3ee' : t.navActiveText,
                       border: t.isDark ? '1px solid #22d3ee40' : 'none',
                       boxShadow: t.isDark ? '0 0 6px rgba(34,211,238,0.3)' : 'none',
                     }}

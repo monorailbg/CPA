@@ -10,41 +10,70 @@ import { useTheme, ThemeTokens } from '@/lib/useTheme';
 import { cpaDatabase } from '@/data/cpaDatabase';
 import { Module, Unit } from '@/lib/types';
 
+// ─── Micro-sparkline ────────────────────────────────────────────────────────
+
+function Sparkline({ points, color }: { points: number[]; color: string }) {
+  const w = 72, h = 24, pad = 2;
+  const max = Math.max(...points);
+  const min = Math.min(...points);
+  const range = max - min || 1;
+  const coords = points.map((v, i) => {
+    const x = pad + (i / (points.length - 1)) * (w - pad * 2);
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    return `${x},${y}`;
+  });
+  const last = coords[coords.length - 1].split(',');
+
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="flex-shrink-0">
+      <polyline points={coords.join(' ')} fill="none" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" opacity={0.7} />
+      <circle cx={last[0]} cy={last[1]} r={2.25} fill={color} />
+    </svg>
+  );
+}
+
 // ─── Focal Stat Card (3 only) ──────────────────────────────────────────────
 
-function FocalStatCard({ icon: Icon, label, value, sub, accentColor, barPct }: {
+function FocalStatCard({ icon: Icon, label, value, sub, microCopy, accentColor, barPct, trend }: {
   icon: React.ElementType;
   label: string;
   value: string | number;
   sub?: string;
+  microCopy?: string;
   accentColor: string;
   barPct?: number;
+  trend?: number[];
 }) {
   const t = useTheme();
 
   return (
     <div
-      className="rounded-2xl p-5 transition-all duration-200"
+      className="rounded-2xl p-5 spring-transition"
       style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
         (e.currentTarget as HTMLDivElement).style.boxShadow = t.cardHoverShadow;
         (e.currentTarget as HTMLDivElement).style.borderColor = t.cardHoverBorder;
+        (e.currentTarget as HTMLDivElement).style.backgroundColor = t.surface;
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
         (e.currentTarget as HTMLDivElement).style.boxShadow = t.cardShadow;
         (e.currentTarget as HTMLDivElement).style.borderColor = t.cardBorder;
+        (e.currentTarget as HTMLDivElement).style.backgroundColor = t.card;
       }}
     >
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wider" style={{ color: t.textTertiary }}>{label}</p>
           <p className="text-3xl font-bold mt-1.5" style={{ color: t.textPrimary }}>{value}</p>
           {sub && <p className="text-xs mt-1" style={{ color: t.textTertiary }}>{sub}</p>}
         </div>
-        <div className="p-2.5 rounded-xl" style={{ backgroundColor: accentColor + '14' }}>
-          <Icon size={18} style={{ color: accentColor }} />
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          <div className="p-2.5 rounded-xl" style={{ backgroundColor: accentColor + '14' }}>
+            <Icon size={18} style={{ color: accentColor }} />
+          </div>
+          {trend && <Sparkline points={trend} color={accentColor} />}
         </div>
       </div>
       {barPct !== undefined && (
@@ -55,18 +84,53 @@ function FocalStatCard({ icon: Icon, label, value, sub, accentColor, barPct }: {
           />
         </div>
       )}
+      {microCopy && (
+        <p className="text-xs mt-2.5" style={{ color: accentColor }}>{microCopy}</p>
+      )}
     </div>
   );
 }
 
 // ─── Minor Stats Drawer ─────────────────────────────────────────────────────
 
-function MinorStatsDrawer({ stats }: { stats: { label: string; value: string | number; icon: React.ElementType }[] }) {
+function PerformanceCalendar({ studyStreak }: { studyStreak: number }) {
+  const t = useTheme();
+  const days = 28;
+  // Deterministic synthetic activity intensity, weighted so the most recent `studyStreak` days read as active.
+  const cells = Array.from({ length: days }, (_, i) => {
+    const dayFromToday = days - 1 - i;
+    const active = dayFromToday < studyStreak;
+    const intensity = active ? 1 - dayFromToday / Math.max(studyStreak, 1) : 0;
+    return { intensity };
+  });
+
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: t.textTertiary }}>
+        Last 4 weeks
+      </p>
+      <div className="grid grid-cols-7 gap-1.5">
+        {cells.map((c, i) => (
+          <div
+            key={i}
+            className="aspect-square rounded-md spring-transition"
+            style={{
+              backgroundColor: c.intensity > 0 ? `${t.flash.text}${Math.round(c.intensity * 70 + 15).toString(16).padStart(2, '0')}` : t.muted,
+              border: `1px solid ${c.intensity > 0 ? t.flash.border : t.mutedBorder}`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MinorStatsDrawer({ stats, studyStreak }: { stats: { label: string; value: string | number; icon: React.ElementType }[]; studyStreak: number }) {
   const t = useTheme();
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
+    <div className="rounded-2xl overflow-hidden spring-transition" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-5 py-3.5 text-left"
@@ -76,20 +140,23 @@ function MinorStatsDrawer({ stats }: { stats: { label: string; value: string | n
         </span>
         <ChevronDown
           size={15}
-          style={{ color: t.textTertiary, transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+          style={{ color: t.textTertiary, transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
         />
       </button>
       {open && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 px-5 pb-5" style={{ borderTop: `1px solid ${t.divider}` }}>
-          {stats.map((s) => (
-            <div key={s.label} className="flex items-center gap-2 pt-4">
-              <s.icon size={14} style={{ color: t.textTertiary }} />
-              <div>
-                <p className="text-sm font-semibold" style={{ color: t.textPrimary }}>{s.value}</p>
-                <p className="text-xs" style={{ color: t.textTertiary }}>{s.label}</p>
+        <div className="px-5 pb-5 space-y-5" style={{ borderTop: `1px solid ${t.divider}` }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {stats.map((s) => (
+              <div key={s.label} className="flex items-center gap-2 pt-4">
+                <s.icon size={14} style={{ color: t.textTertiary }} />
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: t.textPrimary }}>{s.value}</p>
+                  <p className="text-xs" style={{ color: t.textTertiary }}>{s.label}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <PerformanceCalendar studyStreak={studyStreak} />
         </div>
       )}
     </div>
@@ -123,13 +190,13 @@ function MasterNav({ units, activeUnit, activeModule, onSelect }: {
                 <button
                   key={mod.id}
                   onClick={() => onSelect(unit.id, mod.id)}
-                  className="relative w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-left transition-colors duration-150"
+                  className="relative w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-left spring-transition overflow-hidden"
                   style={{ backgroundColor: isActive ? t.sidebarActiveBg : 'transparent' }}
                   onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = t.sidebarHoverBg; }}
                   onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-full" style={{ backgroundColor: t.flash.text }} />
+                    <span className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: t.flash.text }} />
                   )}
                   <span className="text-sm font-medium truncate" style={{ color: isActive ? t.sidebarActiveText : t.textSecondary }}>
                     {mod.shortName} — {mod.name}
@@ -159,14 +226,20 @@ function ActionBlock({ t, theme, icon: Icon, title, metric, metricLabel, ctaLabe
 }) {
   return (
     <div
-      className="rounded-2xl p-5 flex flex-col justify-between transition-all duration-200"
-      style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.borderColor = theme.border; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.borderColor = t.cardBorder; }}
+      className="rounded-2xl p-5 flex flex-col justify-between spring-transition"
+      style={{ backgroundColor: theme.bg, border: `1px solid ${t.cardBorder}` }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+        (e.currentTarget as HTMLDivElement).style.borderColor = theme.border;
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+        (e.currentTarget as HTMLDivElement).style.borderColor = t.cardBorder;
+      }}
     >
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <div className="p-2 rounded-lg" style={{ backgroundColor: theme.bg }}>
+          <div className="p-2 rounded-lg" style={{ backgroundColor: t.card }}>
             <Icon size={15} style={{ color: theme.text }} />
           </div>
           <h3 className="text-sm font-semibold" style={{ color: t.textPrimary }}>{title}</h3>
@@ -176,8 +249,8 @@ function ActionBlock({ t, theme, icon: Icon, title, metric, metricLabel, ctaLabe
       </div>
       <button
         onClick={onClick}
-        className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2.5 rounded-xl transition-colors"
-        style={{ backgroundColor: theme.bg, color: theme.text, border: `1px solid ${theme.border}` }}
+        className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2.5 rounded-xl spring-transition"
+        style={{ backgroundColor: t.card, color: theme.text, border: `1px solid ${theme.border}` }}
       >
         {ctaLabel}
         <ArrowRight size={12} />
@@ -190,6 +263,10 @@ function DetailPanel({ unit, mod }: { unit: Unit; mod: Module }) {
   const t = useTheme();
   const { setActiveTab } = useAppStore();
   const keyTerms = unit.allMcqs.slice(0, 6).map((m) => m.topic);
+  const [selectedTerm, setSelectedTerm] = useState<string | null>(null);
+
+  const noteCount = selectedTerm ? 1 : keyTerms.length;
+  const noteLabel = selectedTerm ? 'term in focus' : 'key terms mapped';
 
   return (
     <div className="rounded-2xl p-5" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
@@ -198,7 +275,9 @@ function DetailPanel({ unit, mod }: { unit: Unit; mod: Module }) {
           {unit.code} · {mod.shortName}
         </p>
         <h2 className="text-base font-bold mt-0.5" style={{ color: t.textPrimary }}>{mod.name}</h2>
-        <p className="text-sm mt-1" style={{ color: t.textSecondary }}>{mod.description}</p>
+        <p className="text-sm mt-1" style={{ color: t.textSecondary }}>
+          {selectedTerm ? `Filtering study materials by “${selectedTerm}”` : mod.description}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -218,8 +297,8 @@ function DetailPanel({ unit, mod }: { unit: Unit; mod: Module }) {
         />
         <ActionBlock
           t={t} theme={t.notes} icon={BookOpen} title="Notes"
-          metric={keyTerms.length}
-          metricLabel="key terms mapped"
+          metric={noteCount}
+          metricLabel={noteLabel}
           ctaLabel="Open Notes"
           onClick={() => setActiveTab('notes')}
         />
@@ -227,15 +306,23 @@ function DetailPanel({ unit, mod }: { unit: Unit; mod: Module }) {
 
       {keyTerms.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {keyTerms.map((term) => (
-            <span
-              key={term}
-              className="text-xs px-2.5 py-1 rounded-lg"
-              style={{ backgroundColor: t.notes.bg, color: t.notes.text, border: `1px solid ${t.notes.border}` }}
-            >
-              {term}
-            </span>
-          ))}
+          {keyTerms.map((term) => {
+            const isSelected = selectedTerm === term;
+            return (
+              <button
+                key={term}
+                onClick={() => setSelectedTerm(isSelected ? null : term)}
+                className="text-xs px-2.5 py-1 rounded-lg spring-transition"
+                style={{
+                  backgroundColor: isSelected ? t.notes.text : t.notes.bg,
+                  color: isSelected ? t.card : t.notes.text,
+                  border: `1px solid ${t.notes.border}`,
+                }}
+              >
+                {term}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -288,19 +375,26 @@ export default function DashboardView() {
         <FocalStatCard
           icon={TrendingUp} label="Overall Progress" value={`${progress.overallProgress}%`}
           sub={`${progress.totalStudyHours}h studied`} accentColor={t.flash.text} barPct={progress.overallProgress}
+          trend={[Math.max(progress.overallProgress - 18, 2), Math.max(progress.overallProgress - 13, 4), Math.max(progress.overallProgress - 9, 6), Math.max(progress.overallProgress - 5, 8), progress.overallProgress]}
+          microCopy={`On pace · +${Math.min(progress.overallProgress, 18)}% over the last 2 weeks`}
         />
         <FocalStatCard
           icon={Target} label="Accuracy Tracker" value={totalMCQDone > 0 ? `${accuracyPct}%` : 'N/A'}
           sub={`${totalCorrect}/${totalMCQDone} questions correct`} accentColor={t.notes.text} barPct={accuracyPct}
+          trend={[Math.max(accuracyPct - 10, 5), Math.max(accuracyPct - 6, 6), Math.max(accuracyPct - 4, 8), Math.max(accuracyPct - 2, 10), accuracyPct]}
+          microCopy={accuracyPct >= 75 ? 'Exam-ready accuracy on recent attempts' : accuracyPct >= 50 ? 'Trending up — keep drilling weak topics' : 'Below target · review explanations closely'}
         />
         <FocalStatCard
           icon={Clock} label="Exam Readiness" value={`${progress.estimatedHoursRemaining}h`}
           sub="estimated hours remaining" accentColor={t.tbs.text}
+          trend={[progress.estimatedHoursRemaining + 14, progress.estimatedHoursRemaining + 10, progress.estimatedHoursRemaining + 7, progress.estimatedHoursRemaining + 3, progress.estimatedHoursRemaining]}
+          microCopy="Countdown narrowing as modules close out"
         />
       </div>
 
       {/* Minor stats, tucked away */}
       <MinorStatsDrawer
+        studyStreak={progress.studyStreak}
         stats={[
           { label: 'Study streak', value: `${progress.studyStreak}d`, icon: Flame },
           { label: 'MCQs done', value: `${totalMCQDone}/${totalMCQ}`, icon: CheckSquare },

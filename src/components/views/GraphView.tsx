@@ -68,6 +68,14 @@ const AUD_EDGES: GraphEdge[] = [
   { id: 'ae8', from: 'mat', to: 'opinion', label: 'Informs' },
 ];
 
+const CROSS_TOPIC_LINKS: Record<string, string> = {
+  is: 'REG · Tax Classifications — book-tax income differences flow into Schedule M-1 reconciliations.',
+  tax: 'REG · Deferred Tax Elections — ASC 740 provisions tie directly to entity-level tax planning.',
+  rev: 'REG · Installment Sale Method — revenue timing differences affect taxable income recognition.',
+  opinion: 'REG · Practitioner Due Diligence — audit opinions inform Circular 230 standards of practice.',
+  mat: 'REG · Penalty Thresholds — materiality concepts parallel substantial understatement penalty tests.',
+};
+
 const SIZE_PROPS = {
   lg: { w: 140, h: 46, fontSize: 11, fontWeight: 700 },
   md: { w: 130, h: 40, fontSize: 10, fontWeight: 600 },
@@ -94,9 +102,9 @@ export default function GraphView() {
         <div className="flex items-center gap-3">
           <div
             className="p-2.5 rounded-xl"
-            style={{ backgroundColor: t.isDark ? '#1e293b' : '#0f172a', border: t.isDark ? '1px solid #334155' : 'none', boxShadow: t.isDark ? '0 0 12px rgba(34,211,238,0.12)' : 'none' }}
+            style={{ backgroundColor: t.isDark ? '#1e293b' : t.navActiveBg, border: t.isDark ? '1px solid #334155' : 'none', boxShadow: t.isDark ? '0 0 12px rgba(34,211,238,0.12)' : 'none' }}
           >
-            <Network size={16} style={{ color: t.isDark ? '#22d3ee' : '#ffffff' }} />
+            <Network size={16} style={{ color: t.isDark ? '#22d3ee' : t.navActiveText }} />
           </div>
           <div>
             <h1 className="text-lg font-bold" style={{ color: t.textPrimary }}>Knowledge Dependency Graph</h1>
@@ -139,7 +147,7 @@ export default function GraphView() {
 
             {/* Grid */}
             <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-              <path d="M 30 0 L 0 0 0 30" fill="none" stroke={t.isDark ? '#0f172a' : '#f8fafc'} strokeWidth="0.5" />
+              <path d="M 30 0 L 0 0 0 30" fill="none" stroke={t.isDark ? '#0f172a' : t.muted} strokeWidth="0.5" />
             </pattern>
             <rect width="100%" height="100%" fill="url(#grid)" />
 
@@ -154,7 +162,7 @@ export default function GraphView() {
               const x2 = tn.x + tp.w / 2, y2 = tn.y + tp.h / 2;
               const midX = (x1 + x2) / 2, midY = (y1 + y2) / 2;
               const isHl = selectedNode && (selectedNode.id === edge.from || selectedNode.id === edge.to);
-              const hlColor = t.isDark ? '#22d3ee' : '#0f172a';
+              const hlColor = t.isDark ? '#22d3ee' : t.navActiveBg;
 
               return (
                 <g key={edge.id}>
@@ -199,8 +207,8 @@ export default function GraphView() {
                   )}
                   <rect
                     width={props.w} height={props.h} rx={8}
-                    fill={isSelected ? (t.isDark ? '#0f172a' : '#0f172a') : token.bg}
-                    stroke={isSelected ? (t.isDark ? token.border : '#0f172a') : token.border}
+                    fill={isSelected ? t.navActiveBg : token.bg}
+                    stroke={isSelected ? (t.isDark ? token.border : t.navActiveBg) : token.border}
                     strokeWidth={1.5}
                     style={{ filter: isSelected && t.isDark ? `drop-shadow(0 0 8px ${token.border}60)` : 'none' }}
                   />
@@ -208,7 +216,7 @@ export default function GraphView() {
                     x={props.w / 2} y={props.h / 2 + 1}
                     textAnchor="middle" dominantBaseline="middle"
                     fontSize={props.fontSize} fontWeight={props.fontWeight}
-                    fill={isSelected ? (t.isDark ? token.text : '#ffffff') : token.text}
+                    fill={isSelected ? (t.isDark ? token.text : t.navActiveText) : token.text}
                     className="select-none"
                     style={{ textShadow: t.isDark && isSelected ? `0 0 8px ${token.text}` : 'none' }}
                   >
@@ -241,6 +249,14 @@ export default function GraphView() {
                 return getNodeById(otherId)?.label;
               }).filter(Boolean).join(', ')}
             </p>
+            {CROSS_TOPIC_LINKS[selectedNode.id] && (
+              <p
+                className="text-xs mt-2 pt-2 font-medium"
+                style={{ color: t.tbs.text, borderTop: `1px solid ${t.divider}` }}
+              >
+                Cross-topic dependency: {CROSS_TOPIC_LINKS[selectedNode.id]}
+              </p>
+            )}
           </div>
         </div>
       )}

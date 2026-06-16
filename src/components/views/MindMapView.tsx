@@ -87,7 +87,7 @@ function TreeNodeComponent({ node }: { node: TreeNode }) {
       {hasChildren && expanded && (
         <div
           className="mt-1.5 space-y-1.5 ml-3 pl-3"
-          style={{ borderLeft: `1px solid ${t.isDark ? '#334155' : '#e2e8f0'}` }}
+          style={{ borderLeft: `1px solid ${t.isDark ? '#334155' : t.cardBorder}` }}
         >
           {node.children!.map((child) => (
             <TreeNodeComponent key={child.id} node={child} />
@@ -127,12 +127,12 @@ export default function MindMapView() {
         <div
           className="p-2.5 rounded-xl"
           style={{
-            backgroundColor: t.isDark ? '#1e293b' : '#0f172a',
+            backgroundColor: t.isDark ? '#1e293b' : t.navActiveBg,
             border: t.isDark ? '1px solid #334155' : 'none',
             boxShadow: t.isDark ? '0 0 12px rgba(34,211,238,0.12)' : 'none',
           }}
         >
-          <GitBranch size={16} style={{ color: t.isDark ? '#22d3ee' : '#ffffff' }} />
+          <GitBranch size={16} style={{ color: t.isDark ? '#22d3ee' : t.navActiveText }} />
         </div>
         <div>
           <h1 className="text-lg font-bold" style={{ color: t.textPrimary }}>Mind Map — {activeSection}</h1>
@@ -167,12 +167,12 @@ export default function MindMapView() {
           <div
             className="px-4 py-2.5 rounded-xl"
             style={{
-              backgroundColor: t.isDark ? '#1e293b' : '#0f172a',
+              backgroundColor: t.isDark ? '#1e293b' : t.navActiveBg,
               border: t.isDark ? '1px solid #334155' : 'none',
               boxShadow: t.isDark ? '0 0 15px rgba(34,211,238,0.08)' : 'none',
             }}
           >
-            <span className="text-sm font-bold" style={{ color: t.isDark ? '#22d3ee' : '#ffffff' }}>{activeSection}</span>
+            <span className="text-sm font-bold" style={{ color: t.isDark ? '#22d3ee' : t.navActiveText }}>{activeSection}</span>
             <span className="text-xs ml-2" style={{ color: t.isDark ? '#475569' : 'rgba(255,255,255,0.5)' }}>CPA Section</span>
           </div>
           <span className="text-xs" style={{ color: t.textTertiary }}>
@@ -199,17 +199,18 @@ export default function MindMapView() {
             { from: 'Revenue Recognition', to: 'Income Statement', type: 'impacts' },
             { from: 'Audit Risk Model', to: 'Evidence Procedures', type: 'drives' },
             { from: 'Tax Basis', to: 'Deferred Tax', type: 'creates' },
+            { from: 'FAR Income Statements', to: 'REG Tax Classifications', type: 'cross-references' },
           ].map((rel, i) => (
             <div
               key={i}
               className="flex items-center gap-2 p-3 rounded-xl"
-              style={{ backgroundColor: t.isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${t.isDark ? '#1e293b' : '#f1f5f9'}` }}
+              style={{ backgroundColor: t.isDark ? '#0f172a' : t.muted, border: `1px solid ${t.isDark ? '#1e293b' : t.mutedBorder}` }}
             >
               <span className="text-xs font-medium" style={{ color: t.textSecondary }}>{rel.from}</span>
               <div className="flex items-center gap-1 flex-1 justify-center" style={{ color: t.textTertiary }}>
-                <div className="flex-1 h-px" style={{ backgroundColor: t.isDark ? '#334155' : '#e2e8f0' }} />
+                <div className="flex-1 h-px" style={{ backgroundColor: t.isDark ? '#334155' : t.cardBorder }} />
                 <span className="text-xs px-1" style={{ color: t.textTertiary }}>{rel.type}</span>
-                <div className="flex-1 h-px" style={{ backgroundColor: t.isDark ? '#334155' : '#e2e8f0' }} />
+                <div className="flex-1 h-px" style={{ backgroundColor: t.isDark ? '#334155' : t.cardBorder }} />
                 <ChevronRight size={10} style={{ color: t.textTertiary }} />
               </div>
               <span className="text-xs font-medium" style={{ color: t.textSecondary }}>{rel.to}</span>

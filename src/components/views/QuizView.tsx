@@ -1,11 +1,104 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { CheckCircle2, XCircle, Terminal, Award, AlertCircle, ChevronRight, Clock, Play, BarChart2, BookOpen } from 'lucide-react';
+import { CheckCircle2, XCircle, Terminal, Award, AlertCircle, ChevronRight, Clock, Play, BarChart2, BookOpen, FileSpreadsheet } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useTheme } from '@/lib/useTheme';
 import { cpaDatabase } from '@/data/cpaDatabase';
-import { MCQ, QuizSession } from '@/lib/types';
+import { MCQ, QuizSession, Unit } from '@/lib/types';
+
+// ─── TBS Split-Screen Simulation (exam-mode sessions) ──────────────────────
+
+function TBSSimulationPanel({ unit }: { unit: Unit }) {
+  const t = useTheme();
+  const exhibits = useMemo(() => [
+    { label: 'Exhibit A — Unit Brief', body: unit.modules.map((m) => `${m.shortName}: ${m.description}`).join('\n\n') },
+    { label: 'Exhibit B — Topic Index', body: unit.allMcqs.slice(0, 8).map((m, i) => `${i + 1}. ${m.topic}`).join('\n') },
+    { label: 'Exhibit C — Reference Notes', body: unit.allFlashcards.slice(0, 5).map((f) => `• ${f.front}`).join('\n') },
+  ], [unit]);
+  const [activeExhibit, setActiveExhibit] = useState(0);
+
+  const rowLabels = unit.allMcqs.slice(0, 5).map((m) => m.topic);
+  const [grid, setGrid] = useState<Record<string, string>>({});
+  const setCell = (row: number, col: string, value: string) => setGrid((g) => ({ ...g, [`${row}-${col}`]: value }));
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
+      <div className="px-5 py-3.5 flex items-center gap-2" style={{ borderBottom: `1px solid ${t.divider}` }}>
+        <FileSpreadsheet size={14} style={{ color: t.tbs.text }} />
+        <h2 className="text-sm font-semibold" style={{ color: t.textPrimary }}>Task-Based Simulation — {unit.code}</h2>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2">
+        {/* Left: exhibit tabs */}
+        <div style={{ borderRight: `1px solid ${t.divider}` }}>
+          <div className="flex items-center gap-1 px-4 pt-3 flex-wrap">
+            {exhibits.map((ex, i) => (
+              <button
+                key={ex.label}
+                onClick={() => setActiveExhibit(i)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium spring-transition"
+                style={
+                  activeExhibit === i
+                    ? { backgroundColor: t.tbs.bg, color: t.tbs.text, border: `1px solid ${t.tbs.border}` }
+                    : { backgroundColor: 'transparent', color: t.textTertiary, border: '1px solid transparent' }
+                }
+              >
+                {ex.label}
+              </button>
+            ))}
+          </div>
+          <div className="p-4">
+            <pre
+              className="text-xs leading-relaxed whitespace-pre-wrap font-sans p-4 rounded-xl"
+              style={{ color: t.textSecondary, backgroundColor: t.muted, border: `1px solid ${t.mutedBorder}`, minHeight: '220px' }}
+            >
+              {exhibits[activeExhibit].body || 'No reference data available for this exhibit.'}
+            </pre>
+          </div>
+        </div>
+
+        {/* Right: interactive spreadsheet workspace */}
+        <div className="p-4 overflow-x-auto">
+          <table className="w-full text-xs border-separate" style={{ borderSpacing: 0 }}>
+            <thead>
+              <tr>
+                {['Line Item', 'Debit', 'Credit', 'Notes'].map((h) => (
+                  <th
+                    key={h}
+                    className="text-left font-semibold px-2.5 py-2"
+                    style={{ color: t.textTertiary, borderBottom: `1px solid ${t.divider}` }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rowLabels.map((label, row) => (
+                <tr key={row}>
+                  <td className="px-2.5 py-1.5 font-medium" style={{ color: t.textPrimary, borderBottom: `1px solid ${t.divider}` }}>
+                    {label}
+                  </td>
+                  {['Debit', 'Credit', 'Notes'].map((col) => (
+                    <td key={col} className="px-1.5 py-1.5" style={{ borderBottom: `1px solid ${t.divider}` }}>
+                      <input
+                        value={grid[`${row}-${col}`] ?? ''}
+                        onChange={(e) => setCell(row, col, e.target.value)}
+                        placeholder={col === 'Notes' ? '—' : '$0'}
+                        className="w-full px-2 py-1.5 rounded-lg text-xs outline-none spring-transition"
+                        style={{ backgroundColor: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Per-Question Feedback State ───────────────────────────────────────────
 
@@ -45,13 +138,13 @@ function MCQCard({
       const isPending = pendingSelection === optionId;
       return {
         backgroundColor: isPending
-          ? t.isDark ? 'rgba(34,211,238,0.1)' : '#0f172a'
-          : t.isDark ? '#1e293b' : '#ffffff',
+          ? t.isDark ? 'rgba(34,211,238,0.1)' : t.navActiveBg
+          : t.isDark ? '#1e293b' : t.card,
         borderColor: isPending
-          ? t.isDark ? '#22d3ee' : '#0f172a'
-          : t.isDark ? '#334155' : '#e2e8f0',
+          ? t.isDark ? '#22d3ee' : t.navActiveBg
+          : t.isDark ? '#334155' : t.cardBorder,
         color: isPending
-          ? t.isDark ? '#22d3ee' : '#ffffff'
+          ? t.isDark ? '#22d3ee' : t.navActiveText
           : t.textSecondary,
         boxShadow: isPending && t.isDark ? '0 0 10px rgba(34,211,238,0.15)' : 'none',
         cursor: 'pointer',
@@ -94,8 +187,8 @@ function MCQCard({
 
     // ── Neutral (not involved in the answer) ────────────────────────────────
     return {
-      backgroundColor: t.isDark ? '#1e293b' : '#f8fafc',
-      borderColor: t.isDark ? '#1e293b' : '#f1f5f9',
+      backgroundColor: t.isDark ? '#1e293b' : t.muted,
+      borderColor: t.isDark ? '#1e293b' : t.mutedBorder,
       color: t.textTertiary,
       cursor: 'default',
       opacity: 0.6,
@@ -165,7 +258,7 @@ function MCQCard({
       <div className="px-6 py-4 flex items-start gap-3" style={{ borderBottom: `1px solid ${t.divider}` }}>
         <span
           className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
-          style={{ backgroundColor: t.isDark ? '#0f172a' : '#f1f5f9', color: t.isDark ? '#94a3b8' : '#64748b' }}
+          style={{ backgroundColor: t.isDark ? '#0f172a' : t.muted, color: t.isDark ? '#94a3b8' : t.textTertiary }}
         >
           {index + 1}
         </span>
@@ -179,7 +272,7 @@ function MCQCard({
             </span>
             <span
               className="text-xs font-medium px-2.5 py-1 rounded-md"
-              style={{ backgroundColor: t.isDark ? '#0f172a' : '#f8fafc', color: t.textTertiary, border: `1px solid ${t.divider}` }}
+              style={{ backgroundColor: t.isDark ? '#0f172a' : t.muted, color: t.textTertiary, border: `1px solid ${t.divider}` }}
             >
               {mcq.topic}
             </span>
@@ -214,8 +307,8 @@ function MCQCard({
               <span
                 className="flex-shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold transition-colors"
                 style={{
-                  borderColor: isPending ? (t.isDark ? '#22d3ee' : '#ffffff') : t.isDark ? '#334155' : '#d1d5db',
-                  color: isPending ? (t.isDark ? '#22d3ee' : '#ffffff') : t.textTertiary,
+                  borderColor: isPending ? (t.isDark ? '#22d3ee' : t.navActiveText) : t.isDark ? '#334155' : t.cardBorder,
+                  color: isPending ? (t.isDark ? '#22d3ee' : t.navActiveText) : t.textTertiary,
                 }}
               >
                 {letter}
@@ -236,7 +329,7 @@ function MCQCard({
       {feedback && (
         <div
           className="mx-6 mb-4 p-4 rounded-xl"
-          style={{ backgroundColor: t.isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${t.isDark ? '#334155' : '#e2e8f0'}` }}
+          style={{ backgroundColor: t.isDark ? '#0f172a' : t.muted, border: `1px solid ${t.isDark ? '#334155' : t.mutedBorder}` }}
         >
           <div className="flex items-center gap-2 mb-2">
             {/* Icon strictly tied to success/error state */}
@@ -273,10 +366,10 @@ function MCQCard({
             className="px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
             style={{
               backgroundColor: pendingSelection
-                ? (t.isDark ? '#22d3ee' : '#0f172a')
-                : (t.isDark ? '#1e293b' : '#f1f5f9'),
+                ? (t.isDark ? '#22d3ee' : t.navActiveBg)
+                : (t.isDark ? '#1e293b' : t.muted),
               color: pendingSelection
-                ? (t.isDark ? '#020617' : '#ffffff')
+                ? (t.isDark ? '#020617' : t.navActiveText)
                 : t.textTertiary,
               cursor: pendingSelection ? 'pointer' : 'not-allowed',
               boxShadow: pendingSelection && t.isDark ? '0 0 14px rgba(34,211,238,0.35)' : 'none',
@@ -344,7 +437,7 @@ function QuizSessionCard({ session, onStart }: { session: QuizSession; onStart: 
         )}
         <span
           className="text-xs px-2 py-0.5 rounded-md capitalize"
-          style={{ backgroundColor: t.isDark ? '#0f172a' : '#f8fafc', color: t.textTertiary, border: `1px solid ${t.divider}` }}
+          style={{ backgroundColor: t.isDark ? '#0f172a' : t.muted, color: t.textTertiary, border: `1px solid ${t.divider}` }}
         >
           {session.difficulty}
         </span>
@@ -443,9 +536,9 @@ export default function QuizView() {
         <div className="flex items-center gap-3">
           <div
             className="p-2.5 rounded-xl"
-            style={{ backgroundColor: t.isDark ? '#1e293b' : '#0f172a', border: t.isDark ? '1px solid #334155' : 'none', boxShadow: t.isDark ? '0 0 12px rgba(34,211,238,0.1)' : 'none' }}
+            style={{ backgroundColor: t.isDark ? '#1e293b' : t.tbs.bg, border: t.isDark ? '1px solid #334155' : `1px solid ${t.tbs.border}`, boxShadow: t.isDark ? '0 0 12px rgba(34,211,238,0.1)' : 'none' }}
           >
-            <Terminal size={16} style={{ color: t.isDark ? '#22d3ee' : '#ffffff' }} />
+            <Terminal size={16} style={{ color: t.isDark ? '#22d3ee' : t.tbs.text }} />
           </div>
           <div>
             <h1 className="text-lg font-bold" style={{ color: t.textPrimary }}>
@@ -474,7 +567,7 @@ export default function QuizView() {
             <div
               className="w-12 h-12 rounded-full flex items-center justify-center"
               style={{
-                background: `conic-gradient(${scoreColor} ${scorePercent * 3.6}deg, ${t.isDark ? '#1e293b' : '#f1f5f9'} 0deg)`,
+                background: `conic-gradient(${scoreColor} ${scorePercent * 3.6}deg, ${t.isDark ? '#1e293b' : t.muted} 0deg)`,
                 boxShadow: t.isDark ? `0 0 14px ${scoreColor}40` : 'none',
               }}
             >
@@ -498,7 +591,7 @@ export default function QuizView() {
               className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150"
               style={
                 isActive
-                  ? { backgroundColor: t.isDark ? '#22d3ee' : '#0f172a', color: t.isDark ? '#020617' : '#ffffff', boxShadow: t.isDark ? '0 0 10px rgba(34,211,238,0.3)' : 'none' }
+                  ? { backgroundColor: t.isDark ? '#22d3ee' : t.navActiveBg, color: t.isDark ? '#020617' : t.navActiveText, boxShadow: t.isDark ? '0 0 10px rgba(34,211,238,0.3)' : 'none' }
                   : { backgroundColor: t.card, color: t.textSecondary, border: `1px solid ${t.cardBorder}` }
               }
             >
@@ -558,9 +651,9 @@ export default function QuizView() {
           >
             <div
               className="p-3 rounded-xl"
-              style={{ backgroundColor: t.isDark ? '#1e293b' : '#f1f5f9', border: `1px solid ${t.isDark ? '#334155' : '#e2e8f0'}` }}
+              style={{ backgroundColor: t.isDark ? '#1e293b' : t.muted, border: `1px solid ${t.isDark ? '#334155' : t.mutedBorder}` }}
             >
-              <BookOpen size={16} style={{ color: t.isDark ? '#22d3ee' : '#0f172a' }} />
+              <BookOpen size={16} style={{ color: t.isDark ? '#22d3ee' : t.textPrimary }} />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: t.textPrimary }}>All MCQs — Free Practice</p>
@@ -574,6 +667,8 @@ export default function QuizView() {
       {/* ── Active quiz: MCQ list ───────────────────────────────────────────── */}
       {(activeQuizSession || !currentUnit.quizSessions.length) && sessionMcqs.length > 0 ? (
         <>
+          {currentSession?.mode === 'exam' && <TBSSimulationPanel unit={currentUnit} />}
+
           {/* Progress */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -590,12 +685,12 @@ export default function QuizView() {
                 </button>
               )}
             </div>
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: t.isDark ? '#1e293b' : '#f1f5f9' }}>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: t.isDark ? '#1e293b' : t.muted }}>
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${sessionMcqs.length > 0 ? (answeredCount / sessionMcqs.length) * 100 : 0}%`,
-                  backgroundColor: t.isDark ? '#22d3ee' : '#0f172a',
+                  backgroundColor: t.isDark ? '#22d3ee' : t.navActiveBg,
                   boxShadow: t.isDark ? '0 0 6px rgba(34,211,238,0.5)' : 'none',
                 }}
               />
@@ -616,7 +711,7 @@ export default function QuizView() {
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-lg"
                 style={{
-                  background: `conic-gradient(${scoreColor} ${scorePercent * 3.6}deg, ${t.isDark ? '#1e293b' : '#f1f5f9'} 0deg)`,
+                  background: `conic-gradient(${scoreColor} ${scorePercent * 3.6}deg, ${t.isDark ? '#1e293b' : t.muted} 0deg)`,
                   color: scoreColor,
                   boxShadow: t.isDark ? `0 0 16px ${scoreColor}40` : 'none',
                 }}
@@ -636,7 +731,7 @@ export default function QuizView() {
               <button
                 className="ml-auto px-4 py-2 rounded-xl text-xs font-semibold transition-all"
                 onClick={() => setFeedbackMap({})}
-                style={{ backgroundColor: t.isDark ? '#1e293b' : '#0f172a', color: t.isDark ? '#22d3ee' : '#ffffff', border: t.isDark ? '1px solid #22d3ee40' : 'none' }}
+                style={{ backgroundColor: t.isDark ? '#1e293b' : t.navActiveBg, color: t.isDark ? '#22d3ee' : t.navActiveText, border: t.isDark ? '1px solid #22d3ee40' : 'none' }}
               >
                 Retry
               </button>

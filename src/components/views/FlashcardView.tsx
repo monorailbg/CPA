@@ -36,7 +36,7 @@ function FlashcardComponent({ card }: { card: Flashcard }) {
           style={{
             backfaceVisibility: 'hidden',
             backgroundColor: t.card,
-            border: `2px solid ${t.isDark ? '#334155' : '#e2e8f0'}`,
+            border: `2px solid ${t.isDark ? '#334155' : t.cardBorder}`,
             boxShadow: t.isDark ? '0 0 0 1px rgba(255,255,255,0.03)' : t.cardShadow,
           }}
         >
@@ -53,7 +53,7 @@ function FlashcardComponent({ card }: { card: Flashcard }) {
                   key={i}
                   className="w-1.5 h-1.5 rounded-full transition-colors"
                   style={{
-                    backgroundColor: i < card.masteryLevel ? mastColor : (t.isDark ? '#1e293b' : '#e2e8f0'),
+                    backgroundColor: i < card.masteryLevel ? mastColor : (t.isDark ? '#1e293b' : t.cardBorder),
                     boxShadow: i < card.masteryLevel && t.isDark ? `0 0 4px ${mastColor}` : 'none',
                   }}
                 />
@@ -75,9 +75,9 @@ function FlashcardComponent({ card }: { card: Flashcard }) {
           style={{
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
-            backgroundColor: t.isDark ? '#0f172a' : '#0f172a',
-            border: t.isDark ? `2px solid #22d3ee40` : `2px solid #334155`,
-            boxShadow: t.isDark ? '0 0 30px rgba(34,211,238,0.08)' : 'none',
+            backgroundColor: '#1c1917',
+            border: t.isDark ? `2px solid #22d3ee40` : `2px solid #39399e40`,
+            boxShadow: t.isDark ? '0 0 30px rgba(34,211,238,0.08)' : '0 0 24px rgba(57,57,158,0.1)',
           }}
         >
           <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
@@ -171,12 +171,12 @@ export default function FlashcardView() {
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: t.isDark ? '#1e293b' : '#f1f5f9' }}>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: t.isDark ? '#1e293b' : t.muted }}>
         <div
           className="h-full rounded-full transition-all duration-300"
           style={{
             width: `${progressPct}%`,
-            backgroundColor: t.isDark ? '#60a5fa' : '#4338ca',
+            backgroundColor: t.isDark ? '#60a5fa' : t.flash.text,
             boxShadow: t.isDark ? '0 0 8px rgba(96,165,250,0.6)' : 'none',
           }}
         />
@@ -216,8 +216,8 @@ export default function FlashcardView() {
           onClick={next}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
           style={{
-            backgroundColor: t.isDark ? '#1e293b' : '#0f172a',
-            color: t.isDark ? '#22d3ee' : '#ffffff',
+            backgroundColor: t.isDark ? '#1e293b' : t.navActiveBg,
+            color: t.isDark ? '#22d3ee' : t.navActiveText,
             border: t.isDark ? '1px solid #22d3ee40' : 'none',
             boxShadow: t.isDark ? '0 0 10px rgba(34,211,238,0.15)' : 'none',
           }}
@@ -239,7 +239,7 @@ export default function FlashcardView() {
         <div className="grid grid-cols-6 gap-2">
           {masteryDist.map(({ level, count, label, color }) => (
             <div key={level} className="text-center">
-              <div className="h-16 rounded-lg overflow-hidden flex items-end" style={{ backgroundColor: t.isDark ? '#0f172a' : '#f8fafc' }}>
+              <div className="h-16 rounded-lg overflow-hidden flex items-end" style={{ backgroundColor: t.isDark ? '#0f172a' : t.muted }}>
                 <div
                   className="w-full rounded-lg transition-all duration-500"
                   style={{
@@ -271,7 +271,7 @@ export default function FlashcardView() {
                 onClick={() => setCurrentIndex(idx)}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors"
                 style={{
-                  backgroundColor: idx === currentIndex ? (t.isDark ? '#0f172a' : '#f8fafc') : 'transparent',
+                  backgroundColor: idx === currentIndex ? (t.isDark ? '#0f172a' : t.muted) : 'transparent',
                   borderBottom: `1px solid ${t.divider}`,
                 }}
               >

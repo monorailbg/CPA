@@ -57,7 +57,7 @@ export default function Sidebar() {
                 {/* Unit header */}
                 <button
                   onClick={() => setActiveUnit(isUnitActive ? undefined : unit.id)}
-                  className="relative w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-all duration-150 rounded-xl"
+                  className="relative w-full flex items-center gap-2.5 px-3 py-2.5 text-left spring-transition rounded-xl overflow-hidden"
                   style={{
                     backgroundColor: isUnitActive ? t.sidebarActiveBg : 'transparent',
                     border: isUnitActive && t.isDark ? '1px solid #334155' : '1px solid transparent',
@@ -70,7 +70,7 @@ export default function Sidebar() {
                   }}
                 >
                   {isUnitActive && !t.isDark && (
-                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-full" style={{ backgroundColor: t.flash.text }} />
+                    <span className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: t.flash.text }} />
                   )}
                   <ProgressRing value={unit.totalProgress} isDark={t.isDark} />
                   <div className="flex-1 min-w-0">
@@ -118,7 +118,7 @@ export default function Sidebar() {
                         <button
                           key={mod.id}
                           onClick={() => setActiveModule(isModActive ? undefined : mod.id)}
-                          className="relative w-full flex items-center gap-2 px-2.5 py-2 text-left rounded-lg transition-all duration-150"
+                          className="relative w-full flex items-center gap-2 px-2.5 py-2 text-left rounded-lg spring-transition overflow-hidden"
                           style={{
                             backgroundColor: isModActive ? t.sidebarActiveBg : 'transparent',
                           }}
@@ -130,7 +130,7 @@ export default function Sidebar() {
                           }}
                         >
                           {isModActive && !t.isDark && (
-                            <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full" style={{ backgroundColor: t.flash.text }} />
+                            <span className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: t.flash.text }} />
                           )}
                           {pct >= 80 ? (
                             <CheckCircle2 size={12} style={{ color: t.isDark ? '#34d399' : '#10b981', flexShrink: 0 }} />
@@ -160,7 +160,7 @@ export default function Sidebar() {
         {/* Session stats */}
         <div
           className="mt-6 p-3 rounded-xl"
-          style={{ backgroundColor: t.isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${t.isDark ? '#1e293b' : '#e2e8f0'}` }}
+          style={{ backgroundColor: t.isDark ? '#0f172a' : t.surface, border: `1px solid ${t.isDark ? '#1e293b' : t.surfaceBorder}` }}
         >
           <div className="flex items-center gap-2 mb-2">
             <Clock size={12} style={{ color: t.textTertiary }} />
