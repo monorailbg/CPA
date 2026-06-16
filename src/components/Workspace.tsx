@@ -15,7 +15,7 @@ import GlossaryView from '@/components/views/GlossaryView';
 import GraphView from '@/components/views/GraphView';
 import BlindSpotView from '@/components/views/BlindSpotView';
 
-const FULL_WIDTH_TABS = ['notes', 'glossary'] as const;
+const FULL_WIDTH_TABS = ['dashboard', 'notes', 'glossary'] as const;
 
 export default function Workspace() {
   const { activeTab } = useAppStore();

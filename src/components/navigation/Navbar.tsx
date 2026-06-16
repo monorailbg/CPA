@@ -72,7 +72,7 @@ export default function Navbar() {
                   isActive
                     ? t.isDark
                       ? { backgroundColor: accent + '20', color: accent, border: `1px solid ${accent}`, boxShadow: `0 0 8px ${accent}30` }
-                      : { backgroundColor: '#0f172a', color: '#ffffff', border: '1px solid transparent' }
+                      : { backgroundColor: t.navActiveBg, color: t.navActiveText, border: '1px solid transparent' }
                     : {
                         color: t.navInactiveText,
                         border: '1px solid transparent',
@@ -138,7 +138,7 @@ export default function Navbar() {
                   ? {
                       backgroundColor: t.navActiveBg,
                       color: t.navActiveText,
-                      boxShadow: t.isDark ? '0 0 10px rgba(255,255,255,0.08)' : '0 1px 3px rgba(0,0,0,0.12)',
+                      boxShadow: t.isDark ? '0 0 10px rgba(255,255,255,0.08)' : 'none',
                     }
                   : {
                       color: t.navInactiveText,

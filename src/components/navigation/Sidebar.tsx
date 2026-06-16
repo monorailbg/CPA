@@ -57,11 +57,9 @@ export default function Sidebar() {
                 {/* Unit header */}
                 <button
                   onClick={() => setActiveUnit(isUnitActive ? undefined : unit.id)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-all duration-150 rounded-xl"
+                  className="relative w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-all duration-150 rounded-xl"
                   style={{
-                    backgroundColor: isUnitActive
-                      ? t.isDark ? '#1e293b' : '#0f172a'
-                      : 'transparent',
+                    backgroundColor: isUnitActive ? t.sidebarActiveBg : 'transparent',
                     border: isUnitActive && t.isDark ? '1px solid #334155' : '1px solid transparent',
                   }}
                   onMouseEnter={(e) => {
@@ -71,25 +69,25 @@ export default function Sidebar() {
                     if (!isUnitActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
                   }}
                 >
+                  {isUnitActive && !t.isDark && (
+                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-full" style={{ backgroundColor: t.flash.text }} />
+                  )}
                   <ProgressRing value={unit.totalProgress} isDark={t.isDark} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span
                         className="text-xs font-bold"
-                        style={{ color: isUnitActive ? (t.isDark ? '#22d3ee' : '#ffffff') : t.textPrimary }}
+                        style={{ color: isUnitActive ? (t.isDark ? '#22d3ee' : t.sidebarActiveText) : t.textPrimary }}
                       >
                         {unit.code}
                       </span>
-                      <span
-                        className="text-xs"
-                        style={{ color: isUnitActive ? (t.isDark ? '#64748b' : 'rgba(255,255,255,0.5)') : t.textTertiary }}
-                      >
+                      <span className="text-xs" style={{ color: t.textTertiary }}>
                         {unit.totalProgress}%
                       </span>
                     </div>
                     <p
                       className="text-xs truncate leading-tight mt-0.5"
-                      style={{ color: isUnitActive ? (t.isDark ? '#94a3b8' : 'rgba(255,255,255,0.6)') : t.textSecondary }}
+                      style={{ color: isUnitActive ? t.sidebarActiveText : t.textSecondary }}
                     >
                       {unit.name.length > 28 ? unit.name.slice(0, 28) + '…' : unit.name}
                     </p>
@@ -99,7 +97,7 @@ export default function Sidebar() {
                     className="flex-shrink-0 transition-transform duration-200"
                     style={{
                       transform: isUnitActive ? 'rotate(90deg)' : 'rotate(0deg)',
-                      color: isUnitActive ? (t.isDark ? '#64748b' : 'rgba(255,255,255,0.4)') : t.textTertiary,
+                      color: t.textTertiary,
                     }}
                   />
                 </button>
@@ -120,17 +118,20 @@ export default function Sidebar() {
                         <button
                           key={mod.id}
                           onClick={() => setActiveModule(isModActive ? undefined : mod.id)}
-                          className="w-full flex items-center gap-2 px-2.5 py-2 text-left rounded-lg transition-all duration-150"
+                          className="relative w-full flex items-center gap-2 px-2.5 py-2 text-left rounded-lg transition-all duration-150"
                           style={{
-                            backgroundColor: isModActive ? (t.isDark ? '#0f172a' : '#f1f5f9') : 'transparent',
+                            backgroundColor: isModActive ? t.sidebarActiveBg : 'transparent',
                           }}
                           onMouseEnter={(e) => {
-                            if (!isModActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = t.isDark ? '#0f172a' : '#f8fafc';
+                            if (!isModActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = t.sidebarHoverBg;
                           }}
                           onMouseLeave={(e) => {
                             if (!isModActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
                           }}
                         >
+                          {isModActive && !t.isDark && (
+                            <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full" style={{ backgroundColor: t.flash.text }} />
+                          )}
                           {pct >= 80 ? (
                             <CheckCircle2 size={12} style={{ color: t.isDark ? '#34d399' : '#10b981', flexShrink: 0 }} />
                           ) : (

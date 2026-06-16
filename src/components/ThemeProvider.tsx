@@ -14,7 +14,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
       body.style.backgroundColor = '#020617';
     } else {
       html.classList.remove('dark');
-      body.style.backgroundColor = '#fdfbf7';
+      body.style.backgroundColor = '#faf8f5';
     }
   }, [isDarkMode]);
 
