@@ -15,27 +15,42 @@ const QUESTION_TEMPLATES = [
 
 const DIFFS: Difficulty[] = ['easy', 'easy', 'medium', 'medium', 'hard'];
 
+const CORRECT_TEMPLATES = [
+  (topic: string) => `It is governed by the specific recognition, measurement, and disclosure requirements applicable to ${topic} under the authoritative literature.`,
+  (topic: string) => `The proper treatment follows the recognition and measurement criteria established specifically for ${topic}.`,
+  (topic: string) => `It must be classified, measured, and disclosed in accordance with the standards that directly address ${topic}.`,
+  (topic: string) => `The applicable authoritative guidance prescribes a distinct recognition and measurement model for ${topic}.`,
+];
+
+const WRONG_TEMPLATES = [
+  (wrongTopic: string, topic: string) => `It is governed by the requirements applicable to ${wrongTopic}, not ${topic}.`,
+  (wrongTopic: string, topic: string) => `This reflects the classification rules used for ${wrongTopic} rather than the standards governing ${topic}.`,
+  (wrongTopic: string, topic: string) => `This describes the disclosure threshold established for ${wrongTopic}, which does not apply to ${topic}.`,
+  (wrongTopic: string, topic: string) => `This represents the measurement basis used under the guidance for ${wrongTopic}, a separate area from ${topic}.`,
+];
+
 function buildOptions(mcqId: string, topic: string, otherTopics: string[]): MCQOption[] {
   const wrong = otherTopics.slice(0, 3);
-  const correctText = `It is governed by the specific recognition, measurement, and disclosure requirements applicable to ${topic}.`;
   const labels = ['a', 'b', 'c', 'd'];
   const correctIndex = (topic.length + mcqId.length) % 4;
+  const correctTemplate = CORRECT_TEMPLATES[(topic.length + mcqId.length) % CORRECT_TEMPLATES.length];
   const opts: MCQOption[] = [];
   let wrongIdx = 0;
   for (let i = 0; i < 4; i++) {
     if (i === correctIndex) {
       opts.push({
         id: `${mcqId}-${labels[i]}`,
-        text: correctText,
+        text: correctTemplate(topic),
         isCorrect: true,
         explanation: `Correct — this reflects the authoritative treatment of ${topic}.`,
       });
     } else {
       const otherTopic = wrong[wrongIdx % wrong.length] || 'an unrelated topic';
+      const wrongTemplate = WRONG_TEMPLATES[wrongIdx % WRONG_TEMPLATES.length];
       wrongIdx++;
       opts.push({
         id: `${mcqId}-${labels[i]}`,
-        text: `It is governed by the requirements applicable to ${otherTopic}, not ${topic}.`,
+        text: wrongTemplate(otherTopic, topic),
         isCorrect: false,
         explanation: `Incorrect — this describes ${otherTopic}, which is distinct from ${topic}.`,
       });

@@ -169,56 +169,61 @@ function MCQCard({
         >
           {index + 1}
         </span>
-        <div className="flex-1">
-          <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex-1 min-w-0 max-w-full">
+          <div className="flex flex-wrap gap-2 mb-2.5">
             <span
-              className="text-xs font-medium px-2 py-0.5 rounded-md"
+              className="text-xs font-medium px-2.5 py-1 rounded-md"
               style={{ backgroundColor: t.tbs.bg, color: t.tbs.text, border: `1px solid ${t.tbs.border}` }}
             >
               MCQ
             </span>
             <span
-              className="text-xs font-medium px-2 py-0.5 rounded-md"
+              className="text-xs font-medium px-2.5 py-1 rounded-md"
               style={{ backgroundColor: t.isDark ? '#0f172a' : '#f8fafc', color: t.textTertiary, border: `1px solid ${t.divider}` }}
             >
               {mcq.topic}
             </span>
             <span
-              className="text-xs font-medium px-2 py-0.5 rounded-md"
+              className="text-xs font-medium px-2.5 py-1 rounded-md"
               style={{ backgroundColor: difficultyChip.bg, color: difficultyChip.color, border: `1px solid ${difficultyChip.border}` }}
             >
               {mcq.difficulty}
             </span>
           </div>
-          <p className="text-sm font-medium leading-relaxed" style={{ color: t.textPrimary }}>{mcq.question}</p>
+          <p className="text-sm font-medium leading-relaxed break-words" style={{ color: t.textPrimary }}>{mcq.question}</p>
         </div>
       </div>
 
       {/* Options */}
-      <div className="px-6 py-4 space-y-2.5">
+      <div className="px-6 py-4 flex flex-col gap-2.5 w-full max-w-full">
         {mcq.options.map((option) => {
           const style = getOptionStyle(option.id);
           const icon = getOptionIcon(option.id);
           const isPending = !isLocked && pendingSelection === option.id;
+          // option.id is `${mcqId}-${letter}` — derive just the trailing letter for the badge.
+          const letter = option.id.slice(option.id.lastIndexOf('-') + 1).toUpperCase();
 
           return (
             <button
               key={option.id}
               onClick={() => !isLocked && setPendingSelection(option.id)}
               disabled={isLocked}
-              className="w-full flex items-start gap-3 p-3.5 rounded-xl text-left transition-all duration-150 border"
+              className="w-full max-w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-150 border"
               style={{ ...style, border: `1px solid ${(style as React.CSSProperties).borderColor}` }}
             >
               <span
-                className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-xs font-bold transition-colors"
+                className="flex-shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold transition-colors"
                 style={{
                   borderColor: isPending ? (t.isDark ? '#22d3ee' : '#ffffff') : t.isDark ? '#334155' : '#d1d5db',
                   color: isPending ? (t.isDark ? '#22d3ee' : '#ffffff') : t.textTertiary,
                 }}
               >
-                {option.id.toUpperCase()}
+                {letter}
               </span>
-              <span className="text-sm leading-relaxed flex-1" style={{ color: (style as React.CSSProperties).color as string }}>
+              <span
+                className="text-sm leading-relaxed flex-1 min-w-0"
+                style={{ color: (style as React.CSSProperties).color as string, whiteSpace: 'normal', overflowWrap: 'break-word' }}
+              >
                 {option.text}
               </span>
               {icon}
@@ -253,7 +258,7 @@ function MCQCard({
               className="text-xs mt-2 pt-2 font-medium"
               style={{ color: t.isDark ? '#34d399' : '#065f46', borderTop: `1px solid ${t.divider}` }}
             >
-              Why {correctOption.id.toUpperCase()} is correct: {correctOption.explanation}
+              Why {correctOption.id.slice(correctOption.id.lastIndexOf('-') + 1).toUpperCase()} is correct: {correctOption.explanation}
             </p>
           )}
         </div>
