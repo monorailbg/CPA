@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { RotateCcw, ChevronLeft, ChevronRight, Star, StarOff, Layers, Zap } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useTheme } from '@/lib/useTheme';
@@ -110,11 +110,18 @@ function FlashcardComponent({ card }: { card: Flashcard }) {
 }
 
 export default function FlashcardView() {
-  const { activeSection } = useAppStore();
+  const { activeSection, activeUnit } = useAppStore();
   const t = useTheme();
   const units = cpaDatabase[activeSection] || [];
-  const allCards: Flashcard[] = units.flatMap((u) => u.modules.flatMap((m) => m.flashcards));
+  const selectedUnit = activeUnit ? units.find((u) => u.id === activeUnit) : undefined;
+  const allCards: Flashcard[] = selectedUnit
+    ? selectedUnit.allFlashcards
+    : units.flatMap((u) => u.allFlashcards);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [activeUnit, activeSection]);
 
   const totalCards = allCards.length;
   const currentCard = allCards[currentIndex];
@@ -146,7 +153,9 @@ export default function FlashcardView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold" style={{ color: t.textPrimary }}>Flashcard Engine</h1>
-          <p className="text-sm" style={{ color: t.textTertiary }}>{activeSection} · Spaced Repetition</p>
+          <p className="text-sm" style={{ color: t.textTertiary }}>
+            {activeSection}{selectedUnit ? ` · ${selectedUnit.code} — ${selectedUnit.name}` : ''} · Spaced Repetition
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs" style={{ color: t.textTertiary }}>

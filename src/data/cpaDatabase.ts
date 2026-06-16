@@ -1,4 +1,15 @@
 import { CPADatabase, Unit, Module, MCQ, Flashcard, TBS, Note, GlossaryTerm, BlindSpot } from '@/lib/types';
+import { generateUnitContent } from './curriculumGenerator';
+import { unitTopics } from './unitTopics';
+
+function withGeneratedContent(units: UnitSeed[]): Unit[] {
+  return units.map((unit) => {
+    const topics = unitTopics[unit.id];
+    if (!topics) return { ...unit, allMcqs: [], allFlashcards: [], quizSessions: [] };
+    const { allMcqs, allFlashcards, quizSessions } = generateUnitContent(unit.id, topics);
+    return { ...unit, allMcqs, allFlashcards, quizSessions };
+  });
+}
 
 // ─── Shared Helpers ────────────────────────────────────────────────────────
 
@@ -125,7 +136,9 @@ const farBlindSpots: BlindSpot[] = [
 
 // ─── FAR Units ─────────────────────────────────────────────────────────────
 
-const farUnits: Unit[] = [
+type UnitSeed = Omit<Unit, 'allMcqs' | 'allFlashcards' | 'quizSessions'>;
+
+const farUnits: UnitSeed[] = [
   {
     id: 'far-f1',
     code: 'F1',
@@ -295,7 +308,7 @@ const farUnits: Unit[] = [
 
 // ─── AUD Units ─────────────────────────────────────────────────────────────
 
-const audUnits: Unit[] = [
+const audUnits: UnitSeed[] = [
   {
     id: 'aud-a1',
     code: 'A1',
@@ -475,7 +488,7 @@ const audUnits: Unit[] = [
 
 // ─── REG Units ─────────────────────────────────────────────────────────────
 
-const regUnits: Unit[] = [
+const regUnits: UnitSeed[] = [
   {
     id: 'reg-r1',
     code: 'R1',
@@ -630,7 +643,7 @@ const regUnits: Unit[] = [
 
 // ─── BAR / TCP / ISC Units ─────────────────────────────────────────────────
 
-const barUnits: Unit[] = [
+const barUnits: UnitSeed[] = [
   {
     id: 'bar-b1',
     code: 'B1',
@@ -683,7 +696,7 @@ const barUnits: Unit[] = [
   },
 ];
 
-const tcpUnits: Unit[] = [
+const tcpUnits: UnitSeed[] = [
   {
     id: 'tcp-t1',
     code: 'T1',
@@ -711,7 +724,7 @@ const tcpUnits: Unit[] = [
   },
 ];
 
-const iscUnits: Unit[] = [
+const iscUnits: UnitSeed[] = [
   {
     id: 'isc-i1',
     code: 'I1',
@@ -827,12 +840,12 @@ export const glossaryTerms: GlossaryTerm[] = [
 // ─── Assembled Database ─────────────────────────────────────────────────────
 
 export const cpaDatabase: CPADatabase = {
-  FAR: farUnits,
-  AUD: audUnits,
-  REG: regUnits,
-  BAR: barUnits,
-  TCP: tcpUnits,
-  ISC: iscUnits,
+  FAR: withGeneratedContent(farUnits),
+  AUD: withGeneratedContent(audUnits),
+  REG: withGeneratedContent(regUnits),
+  BAR: withGeneratedContent(barUnits),
+  TCP: withGeneratedContent(tcpUnits),
+  ISC: withGeneratedContent(iscUnits),
 };
 
 export const initialSectionProgress = {
