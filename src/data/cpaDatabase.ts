@@ -66,8 +66,7 @@ const farMCQs: MCQ[] = [
       { id: 'c', text: '$460,000', isCorrect: false },
       { id: 'd', text: '$620,000', isCorrect: false },
     ],
-    isAnswered: true,
-    isCorrect: true,
+    isAnswered: false,
     topic: 'Financial Statements',
     difficulty: 'easy',
     explanation: 'Ending Retained Earnings = Beginning RE + Net Income - Dividends Declared = $500,000 + $120,000 - $40,000 = $580,000.',
@@ -81,7 +80,7 @@ const farFlashcards: Flashcard[] = [
     front: 'What are the two fundamental qualitative characteristics of accounting information?',
     back: 'Relevance and Faithful Representation. Relevance includes predictive value, confirmatory value, and materiality. Faithful representation includes completeness, neutrality, and freedom from error.',
     topic: 'Conceptual Framework',
-    masteryLevel: 3,
+    masteryLevel: 0,
     tags: ['FASB', 'Qualitative Characteristics', 'Conceptual Framework'],
   },
   {
@@ -89,7 +88,7 @@ const farFlashcards: Flashcard[] = [
     front: 'What is the GAAP hierarchy for fair value measurement levels?',
     back: 'Level 1: Quoted prices in active markets\nLevel 2: Observable inputs other than Level 1\nLevel 3: Unobservable inputs (entity\'s own assumptions)\nHighest priority: Level 1. Lowest priority: Level 3.',
     topic: 'Fair Value',
-    masteryLevel: 2,
+    masteryLevel: 0,
     tags: ['ASC 820', 'Fair Value', 'Measurement'],
   },
   {
@@ -97,7 +96,7 @@ const farFlashcards: Flashcard[] = [
     front: 'Mnemonic: DEAD CLIC — what does it stand for?',
     back: 'Debits increase: Dividends, Expenses, Assets, Draws\nCredits increase: Liabilities, Income, Capital\nA quick way to remember the normal balance of each account type.',
     topic: 'Debits & Credits',
-    masteryLevel: 5,
+    masteryLevel: 0,
     tags: ['Debits', 'Credits', 'Mnemonic', 'T-Accounts'],
   },
 ];
@@ -113,26 +112,7 @@ const farNotes: Note[] = [
   },
 ];
 
-const farBlindSpots: BlindSpot[] = [
-  {
-    topicId: 'far-leases',
-    topicName: 'ASC 842 — Lease Accounting',
-    selfConfidence: 80,
-    actualScore: 42,
-    gapScore: 38,
-    attempts: 8,
-    lastAttempted: '2024-01-10',
-  },
-  {
-    topicId: 'far-derivatives',
-    topicName: 'Derivatives & Hedging (ASC 815)',
-    selfConfidence: 70,
-    actualScore: 35,
-    gapScore: 35,
-    attempts: 5,
-    lastAttempted: '2024-01-08',
-  },
-];
+const farBlindSpots: BlindSpot[] = [];
 
 // ─── FAR Units ─────────────────────────────────────────────────────────────
 
@@ -147,8 +127,8 @@ const farUnits: UnitSeed[] = [
     order: 1,
     section: 'FAR',
     isActive: true,
-    totalProgress: 72,
-    lastStudied: '2024-01-12',
+    totalProgress: 0,
+    lastStudied: undefined,
     modules: [
       {
         id: 'far-f1-m1',
@@ -156,7 +136,7 @@ const farUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'FASB/IASB frameworks, qualitative characteristics, financial statement elements.',
         order: 1,
-        metrics: makeMetrics(24, 30, 20, 1, 2, 78),
+        metrics: makeMetrics(0, 30, 0, 0, 2, 0),
         mcqs: farMCQs.slice(0, 2),
         tbsItems: [],
         flashcards: farFlashcards.slice(0, 2),
@@ -169,7 +149,7 @@ const farUnits: UnitSeed[] = [
         shortName: 'M2',
         description: 'Balance sheet components, classification, and presentation requirements.',
         order: 2,
-        metrics: makeMetrics(18, 25, 14, 2, 3, 60),
+        metrics: makeMetrics(0, 25, 0, 0, 3, 0),
         mcqs: farMCQs.slice(2),
         tbsItems: [],
         flashcards: farFlashcards.slice(2),
@@ -186,8 +166,8 @@ const farUnits: UnitSeed[] = [
     order: 2,
     section: 'FAR',
     isActive: false,
-    totalProgress: 45,
-    lastStudied: '2024-01-09',
+    totalProgress: 0,
+    lastStudied: undefined,
     modules: [
       {
         id: 'far-f2-m1',
@@ -195,12 +175,12 @@ const farUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Cash management, A/R, inventory costing methods (FIFO, LIFO, WAC).',
         order: 1,
-        metrics: makeMetrics(15, 35, 10, 1, 3, 40),
+        metrics: makeMetrics(0, 35, 0, 0, 3, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
         notes: [],
-        blindSpots: [farBlindSpots[0]],
+        blindSpots: [],
       },
     ],
   },
@@ -212,7 +192,7 @@ const farUnits: UnitSeed[] = [
     order: 3,
     section: 'FAR',
     isActive: false,
-    totalProgress: 28,
+    totalProgress: 0,
     modules: [
       {
         id: 'far-f3-m1',
@@ -220,12 +200,12 @@ const farUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Bond accounting, ASC 842 lease classification, ROU assets.',
         order: 1,
-        metrics: makeMetrics(8, 40, 4, 0, 4, 20),
+        metrics: makeMetrics(0, 40, 0, 0, 4, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
         notes: [],
-        blindSpots: [farBlindSpots[1]],
+        blindSpots: [],
       },
     ],
   },
@@ -237,7 +217,7 @@ const farUnits: UnitSeed[] = [
     order: 4,
     section: 'FAR',
     isActive: false,
-    totalProgress: 15,
+    totalProgress: 0,
     modules: [
       {
         id: 'far-f4-m1',
@@ -245,7 +225,7 @@ const farUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Government-wide vs fund financial statements, modified accrual basis.',
         order: 1,
-        metrics: makeMetrics(5, 30, 2, 0, 3, 10),
+        metrics: makeMetrics(0, 30, 0, 0, 3, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -262,7 +242,7 @@ const farUnits: UnitSeed[] = [
     order: 5,
     section: 'FAR',
     isActive: false,
-    totalProgress: 10,
+    totalProgress: 0,
     modules: [
       {
         id: 'far-f5-m1',
@@ -270,7 +250,7 @@ const farUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Net assets without/with donor restrictions, statement of activities.',
         order: 1,
-        metrics: makeMetrics(3, 25, 1, 0, 2, 5),
+        metrics: makeMetrics(0, 25, 0, 0, 2, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -317,7 +297,7 @@ const audUnits: UnitSeed[] = [
     order: 1,
     section: 'AUD',
     isActive: false,
-    totalProgress: 55,
+    totalProgress: 0,
     modules: [
       {
         id: 'aud-a1-m1',
@@ -325,7 +305,7 @@ const audUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Conceptual framework, independence rules, threats and safeguards.',
         order: 1,
-        metrics: makeMetrics(20, 30, 16, 1, 2, 60),
+        metrics: makeMetrics(0, 30, 0, 0, 2, 0),
         mcqs: [
           {
             id: 'aud-a1-m1-q1',
@@ -350,7 +330,7 @@ const audUnits: UnitSeed[] = [
             front: 'What are the five AICPA fundamental principles?',
             back: '1. Responsibilities\n2. Public Interest\n3. Integrity\n4. Objectivity & Independence\n5. Due Care\n6. Scope & Nature of Services\n\nMnemonic: "Real People Integrate Objectives Diligently Studying"',
             topic: 'AICPA Code',
-            masteryLevel: 4,
+            masteryLevel: 0,
             tags: ['AICPA Code', 'Ethics', 'Principles'],
           },
         ],
@@ -367,7 +347,7 @@ const audUnits: UnitSeed[] = [
     order: 2,
     section: 'AUD',
     isActive: false,
-    totalProgress: 30,
+    totalProgress: 0,
     modules: [
       {
         id: 'aud-a2-m1',
@@ -375,7 +355,7 @@ const audUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'AR = IR × CR × DR, materiality, and audit planning.',
         order: 1,
-        metrics: makeMetrics(10, 35, 6, 0, 3, 30),
+        metrics: makeMetrics(0, 35, 0, 0, 3, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -392,7 +372,7 @@ const audUnits: UnitSeed[] = [
     order: 3,
     section: 'AUD',
     isActive: false,
-    totalProgress: 20,
+    totalProgress: 0,
     modules: [
       {
         id: 'aud-a3-m1',
@@ -400,7 +380,7 @@ const audUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'AICPA evidence standards, substantive vs. control testing.',
         order: 1,
-        metrics: makeMetrics(7, 40, 4, 0, 4, 20),
+        metrics: makeMetrics(0, 40, 0, 0, 4, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -417,7 +397,7 @@ const audUnits: UnitSeed[] = [
     order: 4,
     section: 'AUD',
     isActive: false,
-    totalProgress: 10,
+    totalProgress: 0,
     modules: [
       {
         id: 'aud-a4-m1',
@@ -425,7 +405,7 @@ const audUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Unmodified, qualified, adverse, and disclaimer opinions.',
         order: 1,
-        metrics: makeMetrics(3, 30, 1, 0, 2, 10),
+        metrics: makeMetrics(0, 30, 0, 0, 2, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -442,7 +422,7 @@ const audUnits: UnitSeed[] = [
     order: 5,
     section: 'AUD',
     isActive: false,
-    totalProgress: 5,
+    totalProgress: 0,
     modules: [
       {
         id: 'aud-a5-m1',
@@ -450,7 +430,7 @@ const audUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'SSARS No. 21, compilation vs. review procedures and reports.',
         order: 1,
-        metrics: makeMetrics(1, 20, 0, 0, 2, 5),
+        metrics: makeMetrics(0, 20, 0, 0, 2, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -497,7 +477,7 @@ const regUnits: UnitSeed[] = [
     order: 1,
     section: 'REG',
     isActive: false,
-    totalProgress: 40,
+    totalProgress: 0,
     modules: [
       {
         id: 'reg-r1-m1',
@@ -505,7 +485,7 @@ const regUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Practice before the IRS, preparer penalties, and due diligence.',
         order: 1,
-        metrics: makeMetrics(14, 25, 10, 0, 2, 45),
+        metrics: makeMetrics(0, 25, 0, 0, 2, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -522,7 +502,7 @@ const regUnits: UnitSeed[] = [
     order: 2,
     section: 'REG',
     isActive: false,
-    totalProgress: 25,
+    totalProgress: 0,
     modules: [
       {
         id: 'reg-r2-m1',
@@ -530,7 +510,7 @@ const regUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Contract formation, defenses, remedies, and agent/principal relationships.',
         order: 1,
-        metrics: makeMetrics(9, 35, 5, 0, 3, 25),
+        metrics: makeMetrics(0, 35, 0, 0, 3, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -547,7 +527,7 @@ const regUnits: UnitSeed[] = [
     order: 3,
     section: 'REG',
     isActive: false,
-    totalProgress: 18,
+    totalProgress: 0,
     modules: [
       {
         id: 'reg-r3-m1',
@@ -555,7 +535,7 @@ const regUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'IRC §61 gross income, exclusions, and above-the-line deductions.',
         order: 1,
-        metrics: makeMetrics(6, 40, 3, 0, 4, 18),
+        metrics: makeMetrics(0, 40, 0, 0, 4, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -572,7 +552,7 @@ const regUnits: UnitSeed[] = [
     order: 4,
     section: 'REG',
     isActive: false,
-    totalProgress: 10,
+    totalProgress: 0,
     modules: [
       {
         id: 'reg-r4-m1',
@@ -580,7 +560,7 @@ const regUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Realization, recognition, holding periods, and §1231 property.',
         order: 1,
-        metrics: makeMetrics(3, 30, 1, 0, 3, 10),
+        metrics: makeMetrics(0, 30, 0, 0, 3, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -597,7 +577,7 @@ const regUnits: UnitSeed[] = [
     order: 5,
     section: 'REG',
     isActive: false,
-    totalProgress: 5,
+    totalProgress: 0,
     modules: [
       {
         id: 'reg-r5-m1',
@@ -605,7 +585,7 @@ const regUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Inside vs. outside basis, special allocations, §754 elections.',
         order: 1,
-        metrics: makeMetrics(1, 35, 0, 0, 3, 5),
+        metrics: makeMetrics(0, 35, 0, 0, 3, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -652,7 +632,7 @@ const barUnits: UnitSeed[] = [
     order: 1,
     section: 'BAR',
     isActive: false,
-    totalProgress: 35,
+    totalProgress: 0,
     modules: [
       {
         id: 'bar-b1-m1',
@@ -660,7 +640,7 @@ const barUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Variance analysis, balanced scorecard, and EVA.',
         order: 1,
-        metrics: makeMetrics(12, 25, 8, 0, 2, 40),
+        metrics: makeMetrics(0, 25, 0, 0, 2, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -677,7 +657,7 @@ const barUnits: UnitSeed[] = [
     order: 2,
     section: 'BAR',
     isActive: false,
-    totalProgress: 15,
+    totalProgress: 0,
     modules: [
       {
         id: 'bar-b2-m1',
@@ -685,7 +665,7 @@ const barUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Acquisition method, goodwill, and purchase price allocation.',
         order: 1,
-        metrics: makeMetrics(5, 30, 2, 0, 2, 15),
+        metrics: makeMetrics(0, 30, 0, 0, 2, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -705,7 +685,7 @@ const tcpUnits: UnitSeed[] = [
     order: 1,
     section: 'TCP',
     isActive: false,
-    totalProgress: 20,
+    totalProgress: 0,
     modules: [
       {
         id: 'tcp-t1-m1',
@@ -713,7 +693,7 @@ const tcpUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'Retirement planning, AMT, NII tax, and tax-advantaged accounts.',
         order: 1,
-        metrics: makeMetrics(7, 25, 4, 0, 2, 22),
+        metrics: makeMetrics(0, 25, 0, 0, 2, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -733,7 +713,7 @@ const iscUnits: UnitSeed[] = [
     order: 1,
     section: 'ISC',
     isActive: false,
-    totalProgress: 10,
+    totalProgress: 0,
     modules: [
       {
         id: 'isc-i1-m1',
@@ -741,7 +721,7 @@ const iscUnits: UnitSeed[] = [
         shortName: 'M1',
         description: 'COBIT, COSO ERM, and IT risk management frameworks.',
         order: 1,
-        metrics: makeMetrics(3, 20, 1, 0, 2, 10),
+        metrics: makeMetrics(0, 20, 0, 0, 2, 0),
         mcqs: [],
         tbsItems: [],
         flashcards: [],
@@ -853,60 +833,60 @@ export const initialSectionProgress = {
     section: 'FAR' as const,
     totalUnits: 6,
     completedUnits: 0,
-    overallProgress: 28,
-    studyStreak: 7,
-    lastStudied: '2024-01-12',
+    overallProgress: 0,
+    studyStreak: 0,
+    lastStudied: undefined,
     estimatedHoursRemaining: 52,
-    totalStudyHours: 18,
+    totalStudyHours: 0,
   },
   AUD: {
     section: 'AUD' as const,
     totalUnits: 6,
     completedUnits: 0,
-    overallProgress: 20,
-    studyStreak: 3,
-    lastStudied: '2024-01-10',
+    overallProgress: 0,
+    studyStreak: 0,
+    lastStudied: undefined,
     estimatedHoursRemaining: 68,
-    totalStudyHours: 12,
+    totalStudyHours: 0,
   },
   REG: {
     section: 'REG' as const,
     totalUnits: 6,
     completedUnits: 0,
-    overallProgress: 16,
-    studyStreak: 2,
-    lastStudied: '2024-01-08',
+    overallProgress: 0,
+    studyStreak: 0,
+    lastStudied: undefined,
     estimatedHoursRemaining: 74,
-    totalStudyHours: 9,
+    totalStudyHours: 0,
   },
   BAR: {
     section: 'BAR' as const,
     totalUnits: 2,
     completedUnits: 0,
-    overallProgress: 25,
-    studyStreak: 1,
-    lastStudied: '2024-01-06',
+    overallProgress: 0,
+    studyStreak: 0,
+    lastStudied: undefined,
     estimatedHoursRemaining: 30,
-    totalStudyHours: 5,
+    totalStudyHours: 0,
   },
   TCP: {
     section: 'TCP' as const,
     totalUnits: 1,
     completedUnits: 0,
-    overallProgress: 20,
+    overallProgress: 0,
     studyStreak: 0,
     lastStudied: undefined,
     estimatedHoursRemaining: 28,
-    totalStudyHours: 3,
+    totalStudyHours: 0,
   },
   ISC: {
     section: 'ISC' as const,
     totalUnits: 1,
     completedUnits: 0,
-    overallProgress: 10,
+    overallProgress: 0,
     studyStreak: 0,
     lastStudied: undefined,
     estimatedHoursRemaining: 32,
-    totalStudyHours: 2,
+    totalStudyHours: 0,
   },
 };
