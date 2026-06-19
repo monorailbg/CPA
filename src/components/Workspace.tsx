@@ -36,17 +36,19 @@ export default function Workspace() {
     }
   };
 
+  const isDashboard = activeTab === 'dashboard';
+
   return (
     <div
-      className="flex flex-col min-h-screen w-full"
+      className="flex flex-col h-screen w-full overflow-hidden"
       style={{ backgroundColor: t.canvas, transition: 'background-color 0.2s ease' }}
     >
       <Navbar />
       <div className="flex flex-1 min-h-0">
         {!isFullWidth && <Sidebar />}
         <main
-          className="flex-1 overflow-y-auto"
-          style={{ minHeight: 'calc(100vh - 88px)', backgroundColor: t.canvas }}
+          className={`flex-1 min-h-0 ${isDashboard ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}
+          style={{ backgroundColor: t.canvas }}
         >
           {renderView()}
         </main>

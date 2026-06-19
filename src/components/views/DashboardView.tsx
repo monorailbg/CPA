@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import {
-  TrendingUp, Target, Clock, ChevronDown, ChevronRight, Flame, Brain,
-  CheckSquare, AlertTriangle, ListChecks, Layers, BookOpen, ArrowRight,
+  TrendingUp, Target, Clock, Flame, CheckSquare, Brain,
+  ChevronRight, ListChecks, Layers, BookOpen, ArrowRight, Circle, CheckCircle2,
 } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useTheme, ThemeTokens } from '@/lib/useTheme';
@@ -13,7 +13,7 @@ import { Module, Unit } from '@/lib/types';
 // ─── Micro-sparkline ────────────────────────────────────────────────────────
 
 function Sparkline({ points, color }: { points: number[]; color: string }) {
-  const w = 72, h = 24, pad = 2;
+  const w = 52, h = 18, pad = 2;
   const max = Math.max(...points);
   const min = Math.min(...points);
   const range = max - min || 1;
@@ -26,193 +26,156 @@ function Sparkline({ points, color }: { points: number[]; color: string }) {
 
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="flex-shrink-0">
-      <polyline points={coords.join(' ')} fill="none" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" opacity={0.7} />
-      <circle cx={last[0]} cy={last[1]} r={2.25} fill={color} />
+      <polyline points={coords.join(' ')} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.7} />
+      <circle cx={last[0]} cy={last[1]} r={1.75} fill={color} />
     </svg>
   );
 }
 
-// ─── Focal Stat Card (3 only) ──────────────────────────────────────────────
+// ─── Compact header stat pill ──────────────────────────────────────────────
 
-function FocalStatCard({ icon: Icon, label, value, sub, microCopy, accentColor, barPct, trend }: {
+function StatPill({ icon: Icon, label, value, accentColor, trend }: {
   icon: React.ElementType;
   label: string;
   value: string | number;
-  sub?: string;
-  microCopy?: string;
   accentColor: string;
-  barPct?: number;
   trend?: number[];
 }) {
   const t = useTheme();
-
   return (
     <div
-      className="rounded-2xl p-5 spring-transition"
-      style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
-        (e.currentTarget as HTMLDivElement).style.boxShadow = t.cardHoverShadow;
-        (e.currentTarget as HTMLDivElement).style.borderColor = t.cardHoverBorder;
-        (e.currentTarget as HTMLDivElement).style.backgroundColor = t.surface;
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-        (e.currentTarget as HTMLDivElement).style.boxShadow = t.cardShadow;
-        (e.currentTarget as HTMLDivElement).style.borderColor = t.cardBorder;
-        (e.currentTarget as HTMLDivElement).style.backgroundColor = t.card;
-      }}
+      className="flex items-center gap-3 px-4 py-2.5 rounded-2xl spring-transition flex-1 min-w-0"
+      style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: t.textTertiary }}>{label}</p>
-          <p className="text-3xl font-bold mt-1.5" style={{ color: t.textPrimary }}>{value}</p>
-          {sub && <p className="text-xs mt-1" style={{ color: t.textTertiary }}>{sub}</p>}
-        </div>
-        <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          <div className="p-2.5 rounded-xl" style={{ backgroundColor: accentColor + '14' }}>
-            <Icon size={18} style={{ color: accentColor }} />
-          </div>
-          {trend && <Sparkline points={trend} color={accentColor} />}
-        </div>
+      <div className="p-2 rounded-xl flex-shrink-0" style={{ backgroundColor: accentColor + '14' }}>
+        <Icon size={15} style={{ color: accentColor }} />
       </div>
-      {barPct !== undefined && (
-        <div className="h-1.5 rounded-full overflow-hidden mt-4" style={{ backgroundColor: t.muted }}>
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${Math.min(barPct, 100)}%`, backgroundColor: accentColor }}
-          />
-        </div>
-      )}
-      {microCopy && (
-        <p className="text-xs mt-2.5" style={{ color: accentColor }}>{microCopy}</p>
-      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-medium uppercase tracking-wider truncate" style={{ color: t.textTertiary }}>{label}</p>
+        <p className="text-base font-bold leading-tight" style={{ color: t.textPrimary }}>{value}</p>
+      </div>
+      {trend && <Sparkline points={trend} color={accentColor} />}
     </div>
   );
 }
 
-// ─── Minor Stats Drawer ─────────────────────────────────────────────────────
+// ─── Column 1: Section Navigator ───────────────────────────────────────────
 
-function PerformanceCalendar({ studyStreak }: { studyStreak: number }) {
+function ProgressRing({ value, size = 26 }: { value: number; size?: number }) {
   const t = useTheme();
-  const days = 28;
-  // Deterministic synthetic activity intensity, weighted so the most recent `studyStreak` days read as active.
-  const cells = Array.from({ length: days }, (_, i) => {
-    const dayFromToday = days - 1 - i;
-    const active = dayFromToday < studyStreak;
-    const intensity = active ? 1 - dayFromToday / Math.max(studyStreak, 1) : 0;
-    return { intensity };
-  });
+  const r = (size - 4) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (value / 100) * circ;
 
   return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: t.textTertiary }}>
-        Last 4 weeks
-      </p>
-      <div className="grid grid-cols-7 gap-1.5">
-        {cells.map((c, i) => (
-          <div
-            key={i}
-            className="aspect-square rounded-md spring-transition"
-            style={{
-              backgroundColor: c.intensity > 0 ? `${t.flash.text}${Math.round(c.intensity * 70 + 15).toString(16).padStart(2, '0')}` : t.muted,
-              border: `1px solid ${c.intensity > 0 ? t.flash.border : t.mutedBorder}`,
-            }}
-          />
-        ))}
-      </div>
-    </div>
+    <svg width={size} height={size} className="rotate-[-90deg] flex-shrink-0">
+      <circle cx={size / 2} cy={size / 2} r={r} stroke={t.mutedBorder} strokeWidth={2.25} fill="none" />
+      <circle
+        cx={size / 2} cy={size / 2} r={r}
+        stroke={t.flash.text} strokeWidth={2.25} fill="none"
+        strokeDasharray={circ} strokeDashoffset={offset}
+        strokeLinecap="round"
+        style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+      />
+    </svg>
   );
 }
 
-function MinorStatsDrawer({ stats, studyStreak }: { stats: { label: string; value: string | number; icon: React.ElementType }[]; studyStreak: number }) {
-  const t = useTheme();
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="rounded-2xl overflow-hidden spring-transition" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-5 py-3.5 text-left"
-      >
-        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.textTertiary }}>
-          More details
-        </span>
-        <ChevronDown
-          size={15}
-          style={{ color: t.textTertiary, transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
-        />
-      </button>
-      {open && (
-        <div className="px-5 pb-5 space-y-5" style={{ borderTop: `1px solid ${t.divider}` }}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {stats.map((s) => (
-              <div key={s.label} className="flex items-center gap-2 pt-4">
-                <s.icon size={14} style={{ color: t.textTertiary }} />
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: t.textPrimary }}>{s.value}</p>
-                  <p className="text-xs" style={{ color: t.textTertiary }}>{s.label}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <PerformanceCalendar studyStreak={studyStreak} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Master: Unit / Module list ────────────────────────────────────────────
-
-function MasterNav({ units, activeUnit, activeModule, onSelect }: {
+function SectionNavigator({ units, activeUnitId, onSelectUnit }: {
   units: Unit[];
-  activeUnit?: string;
-  activeModule?: string;
-  onSelect: (unitId: string, moduleId: string) => void;
+  activeUnitId?: string;
+  onSelectUnit: (unitId: string) => void;
 }) {
   const t = useTheme();
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
-      <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${t.divider}` }}>
-        <h2 className="text-sm font-semibold" style={{ color: t.textPrimary }}>Study Units</h2>
+    <div className="rounded-3xl flex flex-col h-full overflow-hidden" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
+      <div className="px-4 py-3.5 flex-shrink-0" style={{ borderBottom: `1px solid ${t.divider}` }}>
+        <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.textTertiary }}>Sections</h2>
       </div>
-      <div className="max-h-[520px] overflow-y-auto p-2 space-y-1">
-        {units.map((unit) => (
-          <div key={unit.id}>
-            <p className="text-xs font-bold uppercase tracking-wider px-2.5 pt-2 pb-1" style={{ color: t.textTertiary }}>
-              {unit.code} · {unit.name}
-            </p>
-            {unit.modules.map((mod) => {
-              const isActive = activeUnit === unit.id && activeModule === mod.id;
-              return (
-                <button
-                  key={mod.id}
-                  onClick={() => onSelect(unit.id, mod.id)}
-                  className="relative w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-left spring-transition overflow-hidden"
-                  style={{ backgroundColor: isActive ? t.sidebarActiveBg : 'transparent' }}
-                  onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = t.sidebarHoverBg; }}
-                  onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
-                >
-                  {isActive && (
-                    <span className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: t.flash.text }} />
-                  )}
-                  <span className="text-sm font-medium truncate" style={{ color: isActive ? t.sidebarActiveText : t.textSecondary }}>
-                    {mod.shortName} — {mod.name}
-                  </span>
-                  <ChevronRight size={13} style={{ color: t.textTertiary, flexShrink: 0 }} />
-                </button>
-              );
-            })}
-          </div>
-        ))}
+      <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1">
+        {units.map((unit) => {
+          const isActive = activeUnitId === unit.id;
+          return (
+            <button
+              key={unit.id}
+              onClick={() => onSelectUnit(unit.id)}
+              className="relative w-full flex items-center gap-2 px-2.5 py-2.5 rounded-2xl text-left spring-transition overflow-hidden"
+              style={{ backgroundColor: isActive ? t.sidebarActiveBg : 'transparent' }}
+              onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = t.sidebarHoverBg; }}
+              onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
+            >
+              <ProgressRing value={unit.totalProgress} />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold truncate" style={{ color: isActive ? t.sidebarActiveText : t.textPrimary }}>
+                  {unit.code}
+                </p>
+                <p className="text-[11px] truncate" style={{ color: t.textTertiary }}>
+                  {unit.totalProgress}%
+                </p>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-// ─── Detail: Quiz / Flashcard / Notes blocks ───────────────────────────────
+// ─── Column 2: Content List Matrix ─────────────────────────────────────────
+
+function ContentListMatrix({ unit, activeModuleId, onSelectModule }: {
+  unit?: Unit;
+  activeModuleId?: string;
+  onSelectModule: (moduleId: string) => void;
+}) {
+  const t = useTheme();
+
+  return (
+    <div className="rounded-3xl flex flex-col h-full overflow-hidden" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
+      <div className="px-4 py-3.5 flex-shrink-0" style={{ borderBottom: `1px solid ${t.divider}` }}>
+        <h2 className="text-xs font-semibold uppercase tracking-wider truncate" style={{ color: t.textTertiary }}>
+          {unit ? `${unit.code} · Modules` : 'Modules'}
+        </h2>
+      </div>
+      <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1">
+        {unit?.modules.map((mod) => {
+          const isActive = activeModuleId === mod.id;
+          const pct = mod.metrics.mcqTotal > 0 ? Math.round((mod.metrics.mcqCompleted / mod.metrics.mcqTotal) * 100) : 0;
+          return (
+            <button
+              key={mod.id}
+              onClick={() => onSelectModule(mod.id)}
+              className="relative w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-2xl text-left spring-transition overflow-hidden"
+              style={{ backgroundColor: isActive ? t.sidebarActiveBg : 'transparent' }}
+              onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = t.sidebarHoverBg; }}
+              onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                {pct >= 80 ? (
+                  <CheckCircle2 size={14} style={{ color: t.notes.text, flexShrink: 0 }} />
+                ) : (
+                  <Circle size={14} style={{ color: t.mutedBorder, flexShrink: 0 }} />
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: isActive ? t.sidebarActiveText : t.textSecondary }}>
+                    {mod.shortName} — {mod.name}
+                  </p>
+                  <p className="text-[11px] truncate" style={{ color: t.textTertiary }}>
+                    {mod.metrics.mcqCompleted}/{mod.metrics.mcqTotal} MCQ · {mod.metrics.flashcardMastery}% FC
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={13} style={{ color: t.textTertiary, flexShrink: 0 }} />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Column 3: Material Execution Terminal ─────────────────────────────────
 
 function ActionBlock({ t, theme, icon: Icon, title, metric, metricLabel, ctaLabel, onClick }: {
   t: ThemeTokens;
@@ -226,7 +189,7 @@ function ActionBlock({ t, theme, icon: Icon, title, metric, metricLabel, ctaLabe
 }) {
   return (
     <div
-      className="rounded-2xl p-5 flex flex-col justify-between spring-transition"
+      className="rounded-2xl p-4 flex flex-col justify-between spring-transition min-w-0"
       style={{ backgroundColor: theme.bg, border: `1px solid ${t.cardBorder}` }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
@@ -238,74 +201,82 @@ function ActionBlock({ t, theme, icon: Icon, title, metric, metricLabel, ctaLabe
       }}
     >
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="p-2 rounded-lg" style={{ backgroundColor: t.card }}>
-            <Icon size={15} style={{ color: theme.text }} />
+        <div className="flex items-center gap-2 mb-2.5">
+          <div className="p-1.5 rounded-lg" style={{ backgroundColor: t.card }}>
+            <Icon size={13} style={{ color: theme.text }} />
           </div>
-          <h3 className="text-sm font-semibold" style={{ color: t.textPrimary }}>{title}</h3>
+          <h3 className="text-xs font-semibold truncate" style={{ color: t.textPrimary }}>{title}</h3>
         </div>
-        <p className="text-2xl font-bold" style={{ color: theme.text }}>{metric}</p>
-        <p className="text-xs mt-0.5" style={{ color: t.textTertiary }}>{metricLabel}</p>
+        <p className="text-xl font-bold" style={{ color: theme.text }}>{metric}</p>
+        <p className="text-[11px] mt-0.5 truncate" style={{ color: t.textTertiary }}>{metricLabel}</p>
       </div>
       <button
         onClick={onClick}
-        className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2.5 rounded-xl spring-transition"
+        className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2 rounded-xl spring-transition"
         style={{ backgroundColor: t.card, color: theme.text, border: `1px solid ${theme.border}` }}
       >
         {ctaLabel}
-        <ArrowRight size={12} />
+        <ArrowRight size={11} />
       </button>
     </div>
   );
 }
 
-function DetailPanel({ unit, mod }: { unit: Unit; mod: Module }) {
+function MaterialTerminal({ unit, mod }: { unit?: Unit; mod?: Module }) {
   const t = useTheme();
   const { setActiveTab } = useAppStore();
-  const keyTerms = unit.allMcqs.slice(0, 6).map((m) => m.topic);
+  const keyTerms = unit?.allMcqs.slice(0, 6).map((m) => m.topic) ?? [];
   const [selectedTerm, setSelectedTerm] = useState<string | null>(null);
+
+  if (!unit || !mod) {
+    return (
+      <div className="rounded-3xl h-full flex items-center justify-center" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
+        <p className="text-sm" style={{ color: t.textTertiary }}>Select a module to begin.</p>
+      </div>
+    );
+  }
 
   const noteCount = selectedTerm ? 1 : keyTerms.length;
   const noteLabel = selectedTerm ? 'term in focus' : 'key terms mapped';
 
   return (
-    <div className="rounded-2xl p-5" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
-      <div className="mb-4">
+    <div className="rounded-3xl h-full flex flex-col overflow-hidden p-5" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
+      <div className="mb-4 flex-shrink-0">
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.textTertiary }}>
           {unit.code} · {mod.shortName}
         </p>
-        <h2 className="text-base font-bold mt-0.5" style={{ color: t.textPrimary }}>{mod.name}</h2>
-        <p className="text-sm mt-1" style={{ color: t.textSecondary }}>
+        <h2 className="text-base font-bold mt-0.5 truncate" style={{ color: t.textPrimary }}>{mod.name}</h2>
+        <p className="text-sm mt-1 line-clamp-2" style={{ color: t.textSecondary }}>
           {selectedTerm ? `Filtering study materials by “${selectedTerm}”` : mod.description}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 flex-shrink-0">
         <ActionBlock
           t={t} theme={t.tbs} icon={ListChecks} title="Quiz"
           metric={mod.metrics.mcqTotal || unit.allMcqs.length}
           metricLabel="target questions"
-          ctaLabel="Start Quiz"
+          ctaLabel="Start"
           onClick={() => setActiveTab('quiz')}
         />
         <ActionBlock
           t={t} theme={t.flash} icon={Layers} title="Flashcards"
           metric={unit.allFlashcards.length}
           metricLabel="cards in deck"
-          ctaLabel="Review Cards"
+          ctaLabel="Review"
           onClick={() => setActiveTab('flashcards')}
         />
         <ActionBlock
           t={t} theme={t.notes} icon={BookOpen} title="Notes"
           metric={noteCount}
           metricLabel={noteLabel}
-          ctaLabel="Open Notes"
+          ctaLabel="Open"
           onClick={() => setActiveTab('notes')}
         />
       </div>
 
       {keyTerms.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-1.5">
+        <div className="mt-4 flex flex-wrap gap-1.5 overflow-hidden">
           {keyTerms.map((term) => {
             const isSelected = selectedTerm === term;
             return (
@@ -337,85 +308,66 @@ export default function DashboardView() {
   const units = cpaDatabase[activeSection] || [];
   const progress = sectionProgress[activeSection];
 
-  const { totalMCQDone, totalMCQ, totalCorrect, totalTBSDone, totalTBS, avgFlash, totalBlindSpots } = useMemo(() => {
+  const { totalMCQDone, totalMCQ, totalCorrect, avgFlash } = useMemo(() => {
     return {
       totalMCQDone: units.reduce((a, u) => a + u.modules.reduce((b, m) => b + m.metrics.mcqCompleted, 0), 0),
       totalMCQ: units.reduce((a, u) => a + u.modules.reduce((b, m) => b + m.metrics.mcqTotal, 0), 0),
       totalCorrect: units.reduce((a, u) => a + u.modules.reduce((b, m) => b + m.metrics.mcqCorrect, 0), 0),
-      totalTBSDone: units.reduce((a, u) => a + u.modules.reduce((b, m) => b + m.metrics.tbsCompleted, 0), 0),
-      totalTBS: units.reduce((a, u) => a + u.modules.reduce((b, m) => b + m.metrics.tbsTotal, 0), 0),
       avgFlash: units.length > 0
         ? Math.round(units.reduce((a, u) => a + u.modules.reduce((b, m) => b + m.metrics.flashcardMastery, 0) / Math.max(u.modules.length, 1), 0) / units.length)
         : 0,
-      totalBlindSpots: units.reduce((a, u) => a + u.modules.reduce((b, m) => b + m.blindSpots.length, 0), 0),
     };
   }, [units]);
 
   const accuracyPct = totalMCQDone > 0 ? Math.round((totalCorrect / totalMCQDone) * 100) : 0;
 
-  // Resolve active selection, defaulting to the first unit/module so the detail panel is never empty.
   const selectedUnit = units.find((u) => u.id === activeUnit) ?? units[0];
   const selectedModule = selectedUnit?.modules.find((m) => m.id === activeModule) ?? selectedUnit?.modules[0];
 
-  const handleSelect = (unitId: string, moduleId: string) => {
+  const handleSelectUnit = (unitId: string) => {
     setActiveUnit(unitId);
+    const unit = units.find((u) => u.id === unitId);
+    setActiveModule(unit?.modules[0]?.id);
+  };
+
+  const handleSelectModule = (moduleId: string) => {
     setActiveModule(moduleId);
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold" style={{ color: t.textPrimary }}>{activeSection} — Study Dashboard</h1>
-        <p className="text-sm mt-1" style={{ color: t.textTertiary }}>{progress.totalUnits} units in this section</p>
-      </div>
-
-      {/* 3 Focal stat cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <FocalStatCard
-          icon={TrendingUp} label="Overall Progress" value={`${progress.overallProgress}%`}
-          sub={`${progress.totalStudyHours}h studied`} accentColor={t.flash.text} barPct={progress.overallProgress}
-          trend={[Math.max(progress.overallProgress - 18, 2), Math.max(progress.overallProgress - 13, 4), Math.max(progress.overallProgress - 9, 6), Math.max(progress.overallProgress - 5, 8), progress.overallProgress]}
-          microCopy={`On pace · +${Math.min(progress.overallProgress, 18)}% over the last 2 weeks`}
-        />
-        <FocalStatCard
-          icon={Target} label="Accuracy Tracker" value={totalMCQDone > 0 ? `${accuracyPct}%` : 'N/A'}
-          sub={`${totalCorrect}/${totalMCQDone} questions correct`} accentColor={t.notes.text} barPct={accuracyPct}
-          trend={[Math.max(accuracyPct - 10, 5), Math.max(accuracyPct - 6, 6), Math.max(accuracyPct - 4, 8), Math.max(accuracyPct - 2, 10), accuracyPct]}
-          microCopy={accuracyPct >= 75 ? 'Exam-ready accuracy on recent attempts' : accuracyPct >= 50 ? 'Trending up — keep drilling weak topics' : 'Below target · review explanations closely'}
-        />
-        <FocalStatCard
-          icon={Clock} label="Exam Readiness" value={`${progress.estimatedHoursRemaining}h`}
-          sub="estimated hours remaining" accentColor={t.tbs.text}
-          trend={[progress.estimatedHoursRemaining + 14, progress.estimatedHoursRemaining + 10, progress.estimatedHoursRemaining + 7, progress.estimatedHoursRemaining + 3, progress.estimatedHoursRemaining]}
-          microCopy="Countdown narrowing as modules close out"
-        />
-      </div>
-
-      {/* Minor stats, tucked away */}
-      <MinorStatsDrawer
-        studyStreak={progress.studyStreak}
-        stats={[
-          { label: 'Study streak', value: `${progress.studyStreak}d`, icon: Flame },
-          { label: 'MCQs done', value: `${totalMCQDone}/${totalMCQ}`, icon: CheckSquare },
-          { label: 'Flashcard mastery', value: `${avgFlash}%`, icon: Brain },
-          { label: 'TBS completed', value: `${totalTBSDone}/${totalTBS}`, icon: AlertTriangle },
-        ]}
-      />
-
-      {/* Master-Detail workspace */}
-      <div>
-        <h2 className="text-sm font-semibold mb-3" style={{ color: t.textPrimary }}>Module Workspace</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 items-start">
-          <MasterNav units={units} activeUnit={selectedUnit?.id} activeModule={selectedModule?.id} onSelect={handleSelect} />
-          {selectedUnit && selectedModule ? (
-            <DetailPanel unit={selectedUnit} mod={selectedModule} />
-          ) : (
-            <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}` }}>
-              <p className="text-sm" style={{ color: t.textTertiary }}>Select a module to begin.</p>
-            </div>
-          )}
+    <div className="h-full flex flex-col p-4 lg:p-6 gap-4 overflow-hidden">
+      {/* Compact header */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-shrink-0">
+        <div className="flex-shrink-0">
+          <h1 className="text-lg font-bold" style={{ color: t.textPrimary }}>{activeSection}</h1>
+          <p className="text-xs" style={{ color: t.textTertiary }}>{progress.totalUnits} units · {progress.studyStreak}d streak</p>
         </div>
+        <div className="flex gap-3 flex-1 min-w-0">
+          <StatPill
+            icon={TrendingUp} label="Progress" value={`${progress.overallProgress}%`}
+            accentColor={t.flash.text}
+            trend={[Math.max(progress.overallProgress - 18, 2), Math.max(progress.overallProgress - 9, 6), progress.overallProgress]}
+          />
+          <StatPill
+            icon={Target} label="Accuracy" value={totalMCQDone > 0 ? `${accuracyPct}%` : 'N/A'}
+            accentColor={t.notes.text}
+            trend={[Math.max(accuracyPct - 10, 5), Math.max(accuracyPct - 4, 8), accuracyPct]}
+          />
+          <StatPill
+            icon={Clock} label="Remaining" value={`${progress.estimatedHoursRemaining}h`}
+            accentColor={t.tbs.text}
+          />
+          <StatPill icon={Flame} label="Streak" value={`${progress.studyStreak}d`} accentColor={t.glossary.text} />
+          <StatPill icon={CheckSquare} label="MCQs" value={`${totalMCQDone}/${totalMCQ}`} accentColor={t.mcq.text} />
+          <StatPill icon={Brain} label="Mastery" value={`${avgFlash}%`} accentColor={t.flash.text} />
+        </div>
+      </div>
+
+      {/* Zero-scroll 3-column panoramic split */}
+      <div className="flex-1 min-h-0 grid gap-4" style={{ gridTemplateColumns: '20% 35% 45%' }}>
+        <SectionNavigator units={units} activeUnitId={selectedUnit?.id} onSelectUnit={handleSelectUnit} />
+        <ContentListMatrix unit={selectedUnit} activeModuleId={selectedModule?.id} onSelectModule={handleSelectModule} />
+        <MaterialTerminal unit={selectedUnit} mod={selectedModule} />
       </div>
     </div>
   );

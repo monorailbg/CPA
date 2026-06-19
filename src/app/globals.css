@@ -2,42 +2,42 @@
 
 /* ── Light mode tokens ───────────────────────────────────────────────────── */
 :root {
-  --canvas: #f6f3ea;
-  --card: #fafaf7;
-  --card-border: #e6dfd3;
+  --canvas: #f4f4f2;
+  --card: #ffffff;
+  --card-border: #e5e5e0;
   --card-shadow: none;
-  --card-hover-shadow: 0 6px 16px rgba(90, 70, 40, 0.07);
-  --text-primary: #1c1917;
-  --text-secondary: #6b665b;
-  --text-tertiary: #9c9686;
-  --nav-bg: rgba(246, 243, 234, 0.95);
-  --nav-border: #e6dfd3;
-  --sidebar-bg: #fafaf7;
-  --sidebar-border: #e6dfd3;
-  --input-bg: #f6f3ea;
-  --input-border: #e6dfd3;
-  --divider: #eee8dc;
-  --surface: #f1ebdd;
+  --card-hover-shadow: none;
+  --text-primary: #1c1c1e;
+  --text-secondary: #6b6b68;
+  --text-tertiary: #9a9a95;
+  --nav-bg: rgba(244, 244, 242, 0.95);
+  --nav-border: #e5e5e0;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e5e5e0;
+  --input-bg: #f4f4f2;
+  --input-border: #e5e5e0;
+  --divider: #ececea;
+  --surface: #f4f4f2;
 }
 
-/* ── Dark mode (Cyber-Obsidian) tokens ───────────────────────────────────── */
+/* ── Dark mode (Obsidian) tokens ─────────────────────────────────────────── */
 :root.dark {
-  --canvas: #020617;
-  --card: #1e293b;
-  --card-border: #334155;
+  --canvas: #09090b;
+  --card: #1c1c1e;
+  --card-border: #2c2c2e;
   --card-shadow: none;
-  --card-hover-shadow: 0 0 20px rgba(37, 99, 235, 0.18);
-  --text-primary: #ffffff;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #64748b;
-  --nav-bg: rgba(2, 6, 23, 0.97);
-  --nav-border: #1e293b;
-  --sidebar-bg: #0f172a;
-  --sidebar-border: #1e293b;
-  --input-bg: #0f172a;
-  --input-border: #334155;
-  --divider: #1e293b;
-  --surface: #0f172a;
+  --card-hover-shadow: none;
+  --text-primary: #f5f5f7;
+  --text-secondary: #c7c7cc;
+  --text-tertiary: #8e8e93;
+  --nav-bg: rgba(9, 9, 11, 0.97);
+  --nav-border: #2c2c2e;
+  --sidebar-bg: #121214;
+  --sidebar-border: #2c2c2e;
+  --input-bg: #121214;
+  --input-border: #2c2c2e;
+  --divider: #2c2c2e;
+  --surface: #121214;
 }
 
 /* ── Base reset ──────────────────────────────────────────────────────────── */
@@ -102,21 +102,19 @@ input[type='range']::-webkit-slider-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #0f172a;
+  background: #1c1c1e;
   cursor: pointer;
   border: 2px solid #ffffff;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
 }
 :root.dark input[type='range']::-webkit-slider-thumb {
-  background: #22d3ee;
-  border: 2px solid #020617;
-  box-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
+  background: #f5f5f7;
+  border: 2px solid #09090b;
 }
 input[type='range']::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #0f172a;
+  background: #1c1c1e;
   cursor: pointer;
   border: 2px solid #ffffff;
 }
@@ -124,12 +122,12 @@ input[type='range']::-moz-range-thumb {
 /* ── Focus ring ──────────────────────────────────────────────────────────── */
 button:focus-visible,
 input:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid #51618c;
   outline-offset: 2px;
 }
 :root.dark button:focus-visible,
 :root.dark input:focus-visible {
-  outline-color: #22d3ee;
+  outline-color: #a7afd9;
 }
 
 /* ── Utilities ───────────────────────────────────────────────────────────── */
@@ -141,14 +139,6 @@ input:focus-visible {
 }
 
 .spring-transition {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* ── Dark mode glow animations ───────────────────────────────────────────── */
-@keyframes neon-pulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(34, 211, 238, 0.2); }
-  50%       { box-shadow: 0 0 22px rgba(34, 211, 238, 0.4); }
-}
-:root.dark .neon-glow {
-  animation: neon-pulse 3s ease-in-out infinite;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+    background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
