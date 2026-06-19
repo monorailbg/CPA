@@ -110,18 +110,23 @@ function FlashcardComponent({ card }: { card: Flashcard }) {
 }
 
 export default function FlashcardView() {
-  const { activeSection, activeUnit } = useAppStore();
+  const { activeSection, activeUnit, activeModule } = useAppStore();
   const t = useTheme();
   const units = cpaDatabase[activeSection] || [];
   const selectedUnit = activeUnit ? units.find((u) => u.id === activeUnit) : undefined;
-  const allCards: Flashcard[] = selectedUnit
+  const selectedModule = activeModule ? selectedUnit?.modules.find((m) => m.id === activeModule) : undefined;
+  const allCards: Flashcard[] = selectedModule
+    ? selectedModule.flashcards
+    : selectedUnit
     ? selectedUnit.allFlashcards
     : units.flatMap((u) => u.allFlashcards);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // System state safeguard: switching modules resets the deck position so a
+  // previous module's card index never carries over into the new scope.
   useEffect(() => {
     setCurrentIndex(0);
-  }, [activeUnit, activeSection]);
+  }, [activeModule, activeUnit, activeSection]);
 
   const totalCards = allCards.length;
   const currentCard = allCards[currentIndex];
@@ -154,7 +159,7 @@ export default function FlashcardView() {
         <div>
           <h1 className="text-lg font-bold" style={{ color: t.textPrimary }}>Flashcard Engine</h1>
           <p className="text-sm" style={{ color: t.textTertiary }}>
-            {activeSection}{selectedUnit ? ` · ${selectedUnit.code} — ${selectedUnit.name}` : ''} · Spaced Repetition
+            {activeSection}{selectedUnit ? ` · ${selectedUnit.code} — ${selectedUnit.name}` : ''}{selectedModule ? ` · ${selectedModule.shortName} — ${selectedModule.name}` : ''} · Spaced Repetition
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -183,7 +188,7 @@ export default function FlashcardView() {
       </div>
 
       {/* Card */}
-      {currentCard && <FlashcardComponent card={currentCard} />}
+      {currentCard && <FlashcardComponent key={currentCard.id} card={currentCard} />}
 
       {/* Navigation */}
       <div className="flex items-center justify-between">

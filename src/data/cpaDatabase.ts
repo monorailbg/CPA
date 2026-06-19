@@ -1,4 +1,4 @@
-import { CPADatabase, Unit, Module, GlossaryTerm, CPASection } from '@/lib/types';
+import { CPADatabase, Unit, Module, MCQ, MCQOption, Flashcard, Note, GlossaryTerm, CPASection } from '@/lib/types';
 import {
   expandTopics,
   generateModuleObjectives,
@@ -8,6 +8,64 @@ import {
   generateUnitQuizSessions,
 } from './curriculumGenerator';
 import { curriculumOutline, ModuleSeed, UnitSeedSpec } from './moduleSeeds';
+import { CPA_DATA_STORE } from './farF1ContentStore';
+
+// ─── Authentic content adapter (FAR-F1 only) ───────────────────────────────
+// Converts the hand-authored CPA_DATA_STORE schema into the app's native
+// Module/MCQ/Flashcard/Note types, so far-f1's four modules render fully
+// distinguished, independently-scoped exam content instead of generated text.
+
+function buildAuthenticModule(moduleId: string, order: number, seed: ModuleSeed, dynamicKey: string): Module {
+  const content = CPA_DATA_STORE[dynamicKey];
+  const mcqs: MCQ[] = content.mcqs.map((m) => {
+    const options: MCQOption[] = m.options.map((text, i) => ({
+      id: `${m.id}-${String.fromCharCode(97 + i)}`,
+      text,
+      isCorrect: i === m.correctIndex,
+    }));
+    return {
+      id: m.id,
+      question: m.question,
+      options,
+      isAnswered: false,
+      topic: content.title,
+      difficulty: 'medium',
+      explanation: m.explanation,
+    };
+  });
+  const flashcards: Flashcard[] = content.flashcards.map((f) => ({
+    id: f.id,
+    front: f.front,
+    back: f.back,
+    topic: content.title,
+    masteryLevel: 0,
+    tags: content.conceptTags,
+  }));
+  const notes: Note[] = [
+    {
+      id: `${moduleId}-notes`,
+      title: `${content.title} — Summary Notes`,
+      content: content.notesMarkdown,
+      markdownContent: content.notesMarkdown,
+      tags: content.conceptTags,
+      topic: content.title,
+    },
+  ];
+  return {
+    id: moduleId,
+    name: seed.name,
+    shortName: seed.shortName,
+    description: content.description,
+    order,
+    metrics: makeMetrics(0, mcqs.length, 0, 0, 0, 0),
+    mcqs,
+    tbsItems: [],
+    flashcards,
+    notes,
+    blindSpots: [],
+    conceptTags: content.conceptTags,
+  };
+}
 
 // ─── Shared Helpers ────────────────────────────────────────────────────────
 
@@ -26,6 +84,16 @@ const MODULE_MCQ_COUNT = 20;
 
 function buildModule(unitId: string, order: number, seed: ModuleSeed): Module {
   const moduleId = `${unitId}-${seed.shortName.toLowerCase()}`;
+
+  // FAR-F1 modules use fully authentic, hand-authored exam content instead
+  // of template-generated text — every module loads an independent data scope.
+  if (unitId === 'far-f1') {
+    const dynamicKey = `FAR-F1-${seed.shortName.toUpperCase()}`;
+    if (CPA_DATA_STORE[dynamicKey]) {
+      return buildAuthenticModule(moduleId, order, seed, dynamicKey);
+    }
+  }
+
   const topics = expandTopics(seed.topics, MODULE_MCQ_COUNT);
   const mcqs = generateUnitMcqs(moduleId, topics);
   const flashcards = generateUnitFlashcards(moduleId, topics);

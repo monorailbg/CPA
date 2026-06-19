@@ -124,6 +124,7 @@ export interface Module {
   flashcards: Flashcard[];
   notes: Note[];
   blindSpots: BlindSpot[];
+  conceptTags?: string[];
 }
 
 export interface Unit {

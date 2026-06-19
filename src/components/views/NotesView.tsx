@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FileText, Search, ChevronRight, BookMarked } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useTheme } from '@/lib/useTheme';
@@ -110,13 +110,26 @@ function MarkdownRenderer({ content }: { content: string }) {
 }
 
 export default function NotesView() {
-  const { activeSection } = useAppStore();
+  const { activeSection, activeUnit, activeModule } = useAppStore();
   const t = useTheme();
   const units = cpaDatabase[activeSection] || [];
+  const selectedUnit = activeUnit ? units.find((u) => u.id === activeUnit) : undefined;
+  const selectedModule = activeModule ? selectedUnit?.modules.find((m) => m.id === activeModule) : undefined;
   const [search, setSearch] = useState('');
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
-  const allNotes: Note[] = units.flatMap((u) => u.modules.flatMap((m) => m.notes));
+  // System state safeguard: switching modules clears any open note selection
+  // and search filter so the previous module's notes never bleed through.
+  useEffect(() => {
+    setSelectedNote(null);
+    setSearch('');
+  }, [activeModule]);
+
+  const allNotes: Note[] = selectedModule
+    ? selectedModule.notes
+    : selectedUnit
+    ? selectedUnit.modules.flatMap((m) => m.notes)
+    : units.flatMap((u) => u.modules.flatMap((m) => m.notes));
   const filtered = allNotes.filter(
     (n) =>
       !search ||

@@ -225,7 +225,7 @@ function ActionBlock({ t, theme, icon: Icon, title, metric, metricLabel, ctaLabe
 function MaterialTerminal({ unit, mod }: { unit?: Unit; mod?: Module }) {
   const t = useTheme();
   const { setActiveTab } = useAppStore();
-  const keyTerms = unit?.allMcqs.slice(0, 6).map((m) => m.topic) ?? [];
+  const keyTerms = mod?.conceptTags ?? unit?.allMcqs.slice(0, 6).map((m) => m.topic) ?? [];
   const [selectedTerm, setSelectedTerm] = useState<string | null>(null);
 
   if (!unit || !mod) {
@@ -261,7 +261,7 @@ function MaterialTerminal({ unit, mod }: { unit?: Unit; mod?: Module }) {
         />
         <ActionBlock
           t={t} theme={t.flash} icon={Layers} title="Flashcards"
-          metric={unit.allFlashcards.length}
+          metric={mod.flashcards.length || unit.allFlashcards.length}
           metricLabel="cards in deck"
           ctaLabel="Review"
           onClick={() => setActiveTab('flashcards')}

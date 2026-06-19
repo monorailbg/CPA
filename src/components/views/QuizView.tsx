@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { CheckCircle2, XCircle, Terminal, Award, AlertCircle, ChevronRight, Clock, Play, BarChart2, BookOpen, FileSpreadsheet } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useTheme } from '@/lib/useTheme';
@@ -449,7 +449,7 @@ function QuizSessionCard({ session, onStart }: { session: QuizSession; onStart: 
 // ─── Main Quiz View ────────────────────────────────────────────────────────
 
 export default function QuizView() {
-  const { activeSection, activeUnit, activeQuizSession, setActiveQuizSession } = useAppStore();
+  const { activeSection, activeUnit, activeModule, activeQuizSession, setActiveQuizSession } = useAppStore();
   const t = useTheme();
   const units = cpaDatabase[activeSection] || [];
 
@@ -457,6 +457,12 @@ export default function QuizView() {
   const currentUnit = useMemo(
     () => (activeUnit ? units.find((u) => u.id === activeUnit) : units[0]),
     [activeUnit, units]
+  );
+
+  // Resolve active module within the unit (independent data scope per module)
+  const currentModule = useMemo(
+    () => (activeModule ? currentUnit?.modules.find((m) => m.id === activeModule) : undefined),
+    [activeModule, currentUnit]
   );
 
   // Resolve active quiz session
@@ -468,19 +474,25 @@ export default function QuizView() {
     [activeQuizSession, currentUnit]
   );
 
-  // Build MCQ list for active session or all unit MCQs
+  // Build MCQ list for active session, else the active module's own MCQs, else all unit MCQs
   const sessionMcqs: MCQ[] = useMemo(() => {
     if (!currentUnit) return [];
     if (currentSession) {
       const idSet = new Set(currentSession.mcqIds);
       return currentUnit.allMcqs.filter((q) => idSet.has(q.id));
     }
-    // Default: show all MCQs from the current unit's modules
+    if (currentModule) return currentModule.mcqs;
     return currentUnit.allMcqs;
-  }, [currentUnit, currentSession]);
+  }, [currentUnit, currentModule, currentSession]);
 
   // ── Feedback state: keyed by question ID ─────────────────────────────────
   const [feedbackMap, setFeedbackMap] = useState<Record<string, QuestionFeedback>>({});
+
+  // System state safeguard: switching modules clears any in-progress answers
+  // from the previous module so quiz state never bleeds across modules.
+  useEffect(() => {
+    setFeedbackMap({});
+  }, [activeModule]);
 
   const handleAnswer = useCallback((questionId: string, userSelection: string) => {
     const mcq = sessionMcqs.find((q) => q.id === questionId);
@@ -547,7 +559,7 @@ export default function QuizView() {
             <p className="text-sm" style={{ color: t.textTertiary }}>
               {currentSession
                 ? `${currentSession.mcqIds.length} questions · ${currentSession.mode} mode`
-                : `${currentUnit.allMcqs.length} questions · AICPA-style practice`}
+                : `${sessionMcqs.length} questions · AICPA-style practice`}
             </p>
           </div>
         </div>
