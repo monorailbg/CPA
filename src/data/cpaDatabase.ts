@@ -1,15 +1,13 @@
-import { CPADatabase, Unit, Module, MCQ, Flashcard, TBS, Note, GlossaryTerm, BlindSpot } from '@/lib/types';
-import { generateUnitContent } from './curriculumGenerator';
-import { unitTopics } from './unitTopics';
-
-function withGeneratedContent(units: UnitSeed[]): Unit[] {
-  return units.map((unit) => {
-    const topics = unitTopics[unit.id];
-    if (!topics) return { ...unit, allMcqs: [], allFlashcards: [], quizSessions: [] };
-    const { allMcqs, allFlashcards, quizSessions } = generateUnitContent(unit.id, topics);
-    return { ...unit, allMcqs, allFlashcards, quizSessions };
-  });
-}
+import { CPADatabase, Unit, Module, GlossaryTerm, CPASection } from '@/lib/types';
+import {
+  expandTopics,
+  generateModuleObjectives,
+  generateModuleNotes,
+  generateUnitMcqs,
+  generateUnitFlashcards,
+  generateUnitQuizSessions,
+} from './curriculumGenerator';
+import { curriculumOutline, ModuleSeed, UnitSeedSpec } from './moduleSeeds';
 
 // ─── Shared Helpers ────────────────────────────────────────────────────────
 
@@ -24,713 +22,52 @@ const makeMetrics = (mc: number, mt: number, mc_c: number, tb: number, tt: numbe
   studyTimeMinutes: Math.round(mc * 2.5 + tb * 8),
 });
 
-// ─── FAR Data ─────────────────────────────────────────────────────────────
+const MODULE_MCQ_COUNT = 20;
 
-const farMCQs: MCQ[] = [
-  {
-    id: 'far-f1-m1-q1',
-    question: 'Which qualitative characteristic of accounting information ensures that information faithfully represents what it purports to represent?',
-    options: [
-      { id: 'a', text: 'Relevance', isCorrect: false, explanation: 'Relevance means the information can make a difference in a decision.' },
-      { id: 'b', text: 'Faithful Representation', isCorrect: true, explanation: 'Faithful representation means information is complete, neutral, and free from error.' },
-      { id: 'c', text: 'Comparability', isCorrect: false, explanation: 'Comparability allows users to identify similarities and differences.' },
-      { id: 'd', text: 'Timeliness', isCorrect: false, explanation: 'Timeliness means having information available before it loses capacity to influence decisions.' },
-    ],
-    isAnswered: false,
-    topic: 'Conceptual Framework',
-    difficulty: 'medium',
-    explanation: 'Faithful representation is a fundamental qualitative characteristic under the FASB Conceptual Framework. It has three components: completeness, neutrality, and freedom from error.',
-    aicpaSkill: 'Remembering and Understanding',
-  },
-  {
-    id: 'far-f1-m1-q2',
-    question: 'Under U.S. GAAP, which measurement basis values an asset at the amount that would be received if the asset were sold in an orderly transaction between market participants?',
-    options: [
-      { id: 'a', text: 'Historical cost', isCorrect: false, explanation: 'Historical cost reflects the original purchase price.' },
-      { id: 'b', text: 'Current replacement cost', isCorrect: false, explanation: 'Current replacement cost is the amount needed to replace the asset today.' },
-      { id: 'c', text: 'Fair value', isCorrect: true, explanation: 'Fair value (ASC 820) is the price received to sell an asset or paid to transfer a liability in an orderly transaction.' },
-      { id: 'd', text: 'Present value', isCorrect: false, explanation: 'Present value discounts future cash flows at an appropriate rate.' },
-    ],
-    isAnswered: false,
-    topic: 'Measurement',
-    difficulty: 'easy',
-    explanation: 'ASC 820 defines fair value as the price that would be received to sell an asset or paid to transfer a liability in an orderly transaction between market participants at the measurement date.',
-    aicpaSkill: 'Remembering and Understanding',
-  },
-  {
-    id: 'far-f2-m1-q1',
-    question: 'A company reported retained earnings of $500,000 at the beginning of the year. Net income was $120,000, and dividends declared were $40,000. What is ending retained earnings?',
-    options: [
-      { id: 'a', text: '$540,000', isCorrect: false },
-      { id: 'b', text: '$580,000', isCorrect: true, explanation: '$500K + $120K - $40K = $580K' },
-      { id: 'c', text: '$460,000', isCorrect: false },
-      { id: 'd', text: '$620,000', isCorrect: false },
-    ],
-    isAnswered: false,
-    topic: 'Financial Statements',
-    difficulty: 'easy',
-    explanation: 'Ending Retained Earnings = Beginning RE + Net Income - Dividends Declared = $500,000 + $120,000 - $40,000 = $580,000.',
-    aicpaSkill: 'Application',
-  },
-];
+function buildModule(unitId: string, order: number, seed: ModuleSeed): Module {
+  const moduleId = `${unitId}-${seed.shortName.toLowerCase()}`;
+  const topics = expandTopics(seed.topics, MODULE_MCQ_COUNT);
+  const mcqs = generateUnitMcqs(moduleId, topics);
+  const flashcards = generateUnitFlashcards(moduleId, topics);
+  const objectives = generateModuleObjectives(seed.name, seed.topics);
+  const notes = generateModuleNotes(moduleId, seed.name, seed.description, seed.topics, objectives);
+  return {
+    id: moduleId,
+    name: seed.name,
+    shortName: seed.shortName,
+    description: seed.description,
+    order,
+    metrics: makeMetrics(0, mcqs.length, 0, 0, 0, 0),
+    mcqs,
+    tbsItems: [],
+    flashcards,
+    notes: [notes],
+    blindSpots: [],
+  };
+}
 
-const farFlashcards: Flashcard[] = [
-  {
-    id: 'far-fc-1',
-    front: 'What are the two fundamental qualitative characteristics of accounting information?',
-    back: 'Relevance and Faithful Representation. Relevance includes predictive value, confirmatory value, and materiality. Faithful representation includes completeness, neutrality, and freedom from error.',
-    topic: 'Conceptual Framework',
-    masteryLevel: 0,
-    tags: ['FASB', 'Qualitative Characteristics', 'Conceptual Framework'],
-  },
-  {
-    id: 'far-fc-2',
-    front: 'What is the GAAP hierarchy for fair value measurement levels?',
-    back: 'Level 1: Quoted prices in active markets\nLevel 2: Observable inputs other than Level 1\nLevel 3: Unobservable inputs (entity\'s own assumptions)\nHighest priority: Level 1. Lowest priority: Level 3.',
-    topic: 'Fair Value',
-    masteryLevel: 0,
-    tags: ['ASC 820', 'Fair Value', 'Measurement'],
-  },
-  {
-    id: 'far-fc-3',
-    front: 'Mnemonic: DEAD CLIC — what does it stand for?',
-    back: 'Debits increase: Dividends, Expenses, Assets, Draws\nCredits increase: Liabilities, Income, Capital\nA quick way to remember the normal balance of each account type.',
-    topic: 'Debits & Credits',
-    masteryLevel: 0,
-    tags: ['Debits', 'Credits', 'Mnemonic', 'T-Accounts'],
-  },
-];
-
-const farNotes: Note[] = [
-  {
-    id: 'far-notes-f1',
-    title: 'Conceptual Framework — Key Concepts',
-    content: '# Conceptual Framework\n\n## Objective of Financial Reporting\nProvide financial information about the reporting entity that is useful to existing and potential investors, lenders, and other creditors in making decisions about providing resources to the entity.\n\n## Qualitative Characteristics\n\n| Characteristic | Sub-components |\n|---|---|\n| Relevance | Predictive value, Confirmatory value, Materiality |\n| Faithful Representation | Completeness, Neutrality, Free from error |\n\n## Enhancing Characteristics (CVCUT)\n- **C**omparability\n- **V**erifiability\n- **C**onsistency\n- **U**nderstandability\n- **T**imeliness\n\n## Key Constraint\n**Cost-Benefit**: Information should only be provided if the benefit exceeds the cost of providing it.',
-    markdownContent: '# Conceptual Framework Overview',
-    tags: ['Conceptual Framework', 'FASB', 'F1'],
-    topic: 'F1 - Conceptual Framework',
-  },
-];
-
-const farBlindSpots: BlindSpot[] = [];
-
-// ─── FAR Units ─────────────────────────────────────────────────────────────
-
-type UnitSeed = Omit<Unit, 'allMcqs' | 'allFlashcards' | 'quizSessions'>;
-
-const farUnits: UnitSeed[] = [
-  {
-    id: 'far-f1',
-    code: 'F1',
-    name: 'Conceptual Framework, Standard-Setting & Financial Reporting',
-    description: 'FASB Conceptual Framework, financial reporting environment, and general-purpose financial statements.',
-    order: 1,
-    section: 'FAR',
-    isActive: true,
+function buildUnit(section: CPASection, order: number, spec: UnitSeedSpec): Unit {
+  const unitId = `${section.toLowerCase()}-${spec.code.toLowerCase()}`;
+  const modules = spec.modules.map((m, i) => buildModule(unitId, i + 1, m));
+  const allMcqs = modules.flatMap((m) => m.mcqs);
+  const allFlashcards = modules.flatMap((m) => m.flashcards);
+  const quizSessions = generateUnitQuizSessions(unitId, allMcqs);
+  return {
+    id: unitId,
+    code: spec.code,
+    name: spec.name,
+    description: spec.description,
+    order,
+    section,
+    isActive: order === 1,
     totalProgress: 0,
     lastStudied: undefined,
-    modules: [
-      {
-        id: 'far-f1-m1',
-        name: 'Conceptual Framework & Standard Setting',
-        shortName: 'M1',
-        description: 'FASB/IASB frameworks, qualitative characteristics, financial statement elements.',
-        order: 1,
-        metrics: makeMetrics(0, 30, 0, 0, 2, 0),
-        mcqs: farMCQs.slice(0, 2),
-        tbsItems: [],
-        flashcards: farFlashcards.slice(0, 2),
-        notes: farNotes,
-        blindSpots: [],
-      },
-      {
-        id: 'far-f1-m2',
-        name: 'Financial Reporting & Balance Sheet',
-        shortName: 'M2',
-        description: 'Balance sheet components, classification, and presentation requirements.',
-        order: 2,
-        metrics: makeMetrics(0, 25, 0, 0, 3, 0),
-        mcqs: farMCQs.slice(2),
-        tbsItems: [],
-        flashcards: farFlashcards.slice(2),
-        notes: [],
-        blindSpots: farBlindSpots,
-      },
-    ],
-  },
-  {
-    id: 'far-f2',
-    code: 'F2',
-    name: 'Select Financial Statement Accounts',
-    description: 'Cash & equivalents, receivables, inventory, investments, and PP&E.',
-    order: 2,
-    section: 'FAR',
-    isActive: false,
-    totalProgress: 0,
-    lastStudied: undefined,
-    modules: [
-      {
-        id: 'far-f2-m1',
-        name: 'Cash, Receivables & Inventory',
-        shortName: 'M1',
-        description: 'Cash management, A/R, inventory costing methods (FIFO, LIFO, WAC).',
-        order: 1,
-        metrics: makeMetrics(0, 35, 0, 0, 3, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'far-f3',
-    code: 'F3',
-    name: 'Select Transactions',
-    description: 'Long-term debt, leases, income taxes, share-based compensation, and contingencies.',
-    order: 3,
-    section: 'FAR',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'far-f3-m1',
-        name: 'Long-term Debt & Leases',
-        shortName: 'M1',
-        description: 'Bond accounting, ASC 842 lease classification, ROU assets.',
-        order: 1,
-        metrics: makeMetrics(0, 40, 0, 0, 4, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'far-f4',
-    code: 'F4',
-    name: 'State & Local Governments',
-    description: 'Governmental accounting, fund accounting, GASB standards.',
-    order: 4,
-    section: 'FAR',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'far-f4-m1',
-        name: 'Fund Accounting & GASB',
-        shortName: 'M1',
-        description: 'Government-wide vs fund financial statements, modified accrual basis.',
-        order: 1,
-        metrics: makeMetrics(0, 30, 0, 0, 3, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'far-f5',
-    code: 'F5',
-    name: 'Not-for-Profit Accounting',
-    description: 'NFP financial statements, net asset classes, contributions, and endowments.',
-    order: 5,
-    section: 'FAR',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'far-f5-m1',
-        name: 'NFP Reporting & Net Assets',
-        shortName: 'M1',
-        description: 'Net assets without/with donor restrictions, statement of activities.',
-        order: 1,
-        metrics: makeMetrics(0, 25, 0, 0, 2, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'far-f6',
-    code: 'F6',
-    name: 'Financial Statement Analysis',
-    description: 'Ratio analysis, trend analysis, and limitations of financial statements.',
-    order: 6,
-    section: 'FAR',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'far-f6-m1',
-        name: 'Ratio Analysis & FSA',
-        shortName: 'M1',
-        description: 'Liquidity, solvency, profitability ratios and DuPont analysis.',
-        order: 1,
-        metrics: makeMetrics(0, 20, 0, 0, 2, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-];
-
-// ─── AUD Units ─────────────────────────────────────────────────────────────
-
-const audUnits: UnitSeed[] = [
-  {
-    id: 'aud-a1',
-    code: 'A1',
-    name: 'Ethics, Professional Responsibilities & General Principles',
-    description: 'AICPA Code of Professional Conduct, independence, objectivity, and general audit principles.',
-    order: 1,
-    section: 'AUD',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'aud-a1-m1',
-        name: 'AICPA Code & Independence',
-        shortName: 'M1',
-        description: 'Conceptual framework, independence rules, threats and safeguards.',
-        order: 1,
-        metrics: makeMetrics(0, 30, 0, 0, 2, 0),
-        mcqs: [
-          {
-            id: 'aud-a1-m1-q1',
-            question: 'Which threat to independence arises when an auditor has a direct financial interest in an audit client?',
-            options: [
-              { id: 'a', text: 'Self-interest threat', isCorrect: true, explanation: 'A direct financial interest creates a self-interest threat.' },
-              { id: 'b', text: 'Familiarity threat', isCorrect: false },
-              { id: 'c', text: 'Intimidation threat', isCorrect: false },
-              { id: 'd', text: 'Self-review threat', isCorrect: false },
-            ],
-            isAnswered: false,
-            topic: 'Independence',
-            difficulty: 'easy',
-            explanation: 'The self-interest threat occurs when a CPA or firm could benefit from a financial interest in, or other financial relationship with, an attest client.',
-            aicpaSkill: 'Remembering and Understanding',
-          },
-        ],
-        tbsItems: [],
-        flashcards: [
-          {
-            id: 'aud-fc-1',
-            front: 'What are the five AICPA fundamental principles?',
-            back: '1. Responsibilities\n2. Public Interest\n3. Integrity\n4. Objectivity & Independence\n5. Due Care\n6. Scope & Nature of Services\n\nMnemonic: "Real People Integrate Objectives Diligently Studying"',
-            topic: 'AICPA Code',
-            masteryLevel: 0,
-            tags: ['AICPA Code', 'Ethics', 'Principles'],
-          },
-        ],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'aud-a2',
-    code: 'A2',
-    name: 'Assessing Risk & Developing a Planned Response',
-    description: 'Audit risk model, risk assessment procedures, and audit strategy.',
-    order: 2,
-    section: 'AUD',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'aud-a2-m1',
-        name: 'Audit Risk Model & Planning',
-        shortName: 'M1',
-        description: 'AR = IR × CR × DR, materiality, and audit planning.',
-        order: 1,
-        metrics: makeMetrics(0, 35, 0, 0, 3, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'aud-a3',
-    code: 'A3',
-    name: 'Performing Further Procedures & Obtaining Evidence',
-    description: 'Audit procedures, substantive testing, analytical procedures, and sampling.',
-    order: 3,
-    section: 'AUD',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'aud-a3-m1',
-        name: 'Audit Procedures & Evidence',
-        shortName: 'M1',
-        description: 'AICPA evidence standards, substantive vs. control testing.',
-        order: 1,
-        metrics: makeMetrics(0, 40, 0, 0, 4, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'aud-a4',
-    code: 'A4',
-    name: 'Forming Conclusions & Reporting',
-    description: 'Audit opinions, report types, modifications, and emphasis paragraphs.',
-    order: 4,
-    section: 'AUD',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'aud-a4-m1',
-        name: 'Audit Reports & Opinions',
-        shortName: 'M1',
-        description: 'Unmodified, qualified, adverse, and disclaimer opinions.',
-        order: 1,
-        metrics: makeMetrics(0, 30, 0, 0, 2, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'aud-a5',
-    code: 'A5',
-    name: 'Accounting & Review Services',
-    description: 'Compilation and review engagements, SSARS standards.',
-    order: 5,
-    section: 'AUD',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'aud-a5-m1',
-        name: 'Compilation, Review & SSARS',
-        shortName: 'M1',
-        description: 'SSARS No. 21, compilation vs. review procedures and reports.',
-        order: 1,
-        metrics: makeMetrics(0, 20, 0, 0, 2, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'aud-a6',
-    code: 'A6',
-    name: 'Professional Responsibilities',
-    description: 'Quality control, peer review, and Sarbanes-Oxley provisions.',
-    order: 6,
-    section: 'AUD',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'aud-a6-m1',
-        name: 'QC Standards & SOX',
-        shortName: 'M1',
-        description: 'ISQC 1, SAS No. 122, PCAOB oversight, and SOX Section 302/404.',
-        order: 1,
-        metrics: makeMetrics(0, 25, 0, 0, 2, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-];
-
-// ─── REG Units ─────────────────────────────────────────────────────────────
-
-const regUnits: UnitSeed[] = [
-  {
-    id: 'reg-r1',
-    code: 'R1',
-    name: 'Ethics, Professional Responsibilities & Federal Tax Procedures',
-    description: 'Circular 230, preparer penalties, and federal tax procedures.',
-    order: 1,
-    section: 'REG',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'reg-r1-m1',
-        name: 'Circular 230 & Tax Preparer Rules',
-        shortName: 'M1',
-        description: 'Practice before the IRS, preparer penalties, and due diligence.',
-        order: 1,
-        metrics: makeMetrics(0, 25, 0, 0, 2, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'reg-r2',
-    code: 'R2',
-    name: 'Business Law',
-    description: 'Contracts, agency, business entities, negotiable instruments, and secured transactions.',
-    order: 2,
-    section: 'REG',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'reg-r2-m1',
-        name: 'Contracts & Agency Law',
-        shortName: 'M1',
-        description: 'Contract formation, defenses, remedies, and agent/principal relationships.',
-        order: 1,
-        metrics: makeMetrics(0, 35, 0, 0, 3, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'reg-r3',
-    code: 'R3',
-    name: 'Individual Taxation',
-    description: 'Individual gross income, deductions, credits, and AMT.',
-    order: 3,
-    section: 'REG',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'reg-r3-m1',
-        name: 'Gross Income & Exclusions',
-        shortName: 'M1',
-        description: 'IRC §61 gross income, exclusions, and above-the-line deductions.',
-        order: 1,
-        metrics: makeMetrics(0, 40, 0, 0, 4, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'reg-r4',
-    code: 'R4',
-    name: 'Property Taxation',
-    description: 'Capital gains/losses, basis calculations, and depreciation recapture.',
-    order: 4,
-    section: 'REG',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'reg-r4-m1',
-        name: 'Capital Gains & Basis',
-        shortName: 'M1',
-        description: 'Realization, recognition, holding periods, and §1231 property.',
-        order: 1,
-        metrics: makeMetrics(0, 30, 0, 0, 3, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'reg-r5',
-    code: 'R5',
-    name: 'Entity Taxation — Partnerships & S-Corporations',
-    description: 'Partnership taxation, S-corporation elections, pass-through income, and basis tracking.',
-    order: 5,
-    section: 'REG',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'reg-r5-m1',
-        name: 'Partnership Taxation',
-        shortName: 'M1',
-        description: 'Inside vs. outside basis, special allocations, §754 elections.',
-        order: 1,
-        metrics: makeMetrics(0, 35, 0, 0, 3, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'reg-r6',
-    code: 'R6',
-    name: 'Entity Taxation — C-Corporations',
-    description: 'Corporate income tax, dividends received deduction, and consolidated returns.',
-    order: 6,
-    section: 'REG',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'reg-r6-m1',
-        name: 'C-Corporation Tax',
-        shortName: 'M1',
-        description: 'Corporate tax rates, DRD, §351 formations, and §382 limitations.',
-        order: 1,
-        metrics: makeMetrics(0, 30, 0, 0, 3, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-];
-
-// ─── BAR / TCP / ISC Units ─────────────────────────────────────────────────
-
-const barUnits: UnitSeed[] = [
-  {
-    id: 'bar-b1',
-    code: 'B1',
-    name: 'Business Analysis',
-    description: 'Financial analysis, planning, and performance management.',
-    order: 1,
-    section: 'BAR',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'bar-b1-m1',
-        name: 'Financial Analysis & KPIs',
-        shortName: 'M1',
-        description: 'Variance analysis, balanced scorecard, and EVA.',
-        order: 1,
-        metrics: makeMetrics(0, 25, 0, 0, 2, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-  {
-    id: 'bar-b2',
-    code: 'B2',
-    name: 'Technical Accounting',
-    description: 'Advanced accounting topics including business combinations and consolidations.',
-    order: 2,
-    section: 'BAR',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'bar-b2-m1',
-        name: 'Business Combinations (ASC 805)',
-        shortName: 'M1',
-        description: 'Acquisition method, goodwill, and purchase price allocation.',
-        order: 1,
-        metrics: makeMetrics(0, 30, 0, 0, 2, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-];
-
-const tcpUnits: UnitSeed[] = [
-  {
-    id: 'tcp-t1',
-    code: 'T1',
-    name: 'Tax Compliance & Planning — Individuals',
-    description: 'Advanced individual tax planning and compliance strategies.',
-    order: 1,
-    section: 'TCP',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'tcp-t1-m1',
-        name: 'Advanced Individual Tax Planning',
-        shortName: 'M1',
-        description: 'Retirement planning, AMT, NII tax, and tax-advantaged accounts.',
-        order: 1,
-        metrics: makeMetrics(0, 25, 0, 0, 2, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-];
-
-const iscUnits: UnitSeed[] = [
-  {
-    id: 'isc-i1',
-    code: 'I1',
-    name: 'Information Systems & Controls',
-    description: 'IT governance, general controls, application controls, and cybersecurity.',
-    order: 1,
-    section: 'ISC',
-    isActive: false,
-    totalProgress: 0,
-    modules: [
-      {
-        id: 'isc-i1-m1',
-        name: 'IT Governance & COSO',
-        shortName: 'M1',
-        description: 'COBIT, COSO ERM, and IT risk management frameworks.',
-        order: 1,
-        metrics: makeMetrics(0, 20, 0, 0, 2, 0),
-        mcqs: [],
-        tbsItems: [],
-        flashcards: [],
-        notes: [],
-        blindSpots: [],
-      },
-    ],
-  },
-];
+    modules,
+    allMcqs,
+    allFlashcards,
+    quizSessions,
+  };
+}
 
 // ─── Glossary Terms ─────────────────────────────────────────────────────────
 
@@ -819,13 +156,17 @@ export const glossaryTerms: GlossaryTerm[] = [
 
 // ─── Assembled Database ─────────────────────────────────────────────────────
 
+function buildSection(section: CPASection): Unit[] {
+  return curriculumOutline[section].map((spec, i) => buildUnit(section, i + 1, spec));
+}
+
 export const cpaDatabase: CPADatabase = {
-  FAR: withGeneratedContent(farUnits),
-  AUD: withGeneratedContent(audUnits),
-  REG: withGeneratedContent(regUnits),
-  BAR: withGeneratedContent(barUnits),
-  TCP: withGeneratedContent(tcpUnits),
-  ISC: withGeneratedContent(iscUnits),
+  FAR: buildSection('FAR'),
+  AUD: buildSection('AUD'),
+  REG: buildSection('REG'),
+  BAR: buildSection('BAR'),
+  TCP: buildSection('TCP'),
+  ISC: buildSection('ISC'),
 };
 
 export const initialSectionProgress = {
@@ -861,7 +202,7 @@ export const initialSectionProgress = {
   },
   BAR: {
     section: 'BAR' as const,
-    totalUnits: 2,
+    totalUnits: 5,
     completedUnits: 0,
     overallProgress: 0,
     studyStreak: 0,
@@ -871,7 +212,7 @@ export const initialSectionProgress = {
   },
   TCP: {
     section: 'TCP' as const,
-    totalUnits: 1,
+    totalUnits: 5,
     completedUnits: 0,
     overallProgress: 0,
     studyStreak: 0,
@@ -881,7 +222,7 @@ export const initialSectionProgress = {
   },
   ISC: {
     section: 'ISC' as const,
-    totalUnits: 1,
+    totalUnits: 4,
     completedUnits: 0,
     overallProgress: 0,
     studyStreak: 0,

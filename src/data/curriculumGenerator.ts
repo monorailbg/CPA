@@ -1,4 +1,4 @@
-import { MCQ, MCQOption, Flashcard, QuizSession, Difficulty } from '@/lib/types';
+import { MCQ, MCQOption, Flashcard, QuizSession, Difficulty, Note } from '@/lib/types';
 
 // ─── Generic CPA-style content generator ───────────────────────────────────
 // Given a unit id and an ordered list of 20 real CPA topic names for that
@@ -132,4 +132,48 @@ export function generateUnitContent(unitId: string, topics: string[]) {
   const allFlashcards = generateUnitFlashcards(unitId, topics);
   const quizSessions = generateUnitQuizSessions(unitId, allMcqs);
   return { allMcqs, allFlashcards, quizSessions };
+}
+
+// ─── Module-level content generation ───────────────────────────────────────
+// Expands a short, real-topic list out to a target count (cycling) so a
+// module's own 20-question bank can be generated from a compact topic seed.
+
+export function expandTopics(topics: string[], count: number): string[] {
+  if (topics.length === 0) return [];
+  return Array.from({ length: count }, (_, i) => topics[i % topics.length]);
+}
+
+export function generateModuleObjectives(moduleName: string, topics: string[]): string[] {
+  return [
+    `Explain the recognition, measurement, and disclosure requirements tested for ${moduleName}.`,
+    `Apply authoritative guidance to ${topics[0]} and ${topics[1] ?? topics[0]} in exam-style scenarios.`,
+    `Distinguish the correct treatment of ${moduleName} topics from common distractor patterns.`,
+  ];
+}
+
+export function generateModuleNotes(
+  moduleId: string,
+  moduleName: string,
+  description: string,
+  topics: string[],
+  objectives: string[],
+): Note {
+  const objectivesMd = objectives.map((o) => `- ${o}`).join('\n');
+  const uniqueTopics = Array.from(new Set(topics));
+  const conceptsMd = uniqueTopics.map((t) => `- **${t}**`).join('\n');
+  const outlineMd = uniqueTopics.map((t, i) => `${i + 1}. ${t}`).join('\n');
+  const content =
+    `# ${moduleName}\n\n` +
+    `## Learning Objectives\n${objectivesMd}\n\n` +
+    `## Key Concepts\n${conceptsMd}\n\n` +
+    `## Study Outline\n${outlineMd}\n\n` +
+    `## Summary\n${description} Mastery of this module requires applying the recognition, measurement, and disclosure rules across the topics above in both MCQ and task-based simulation formats.`;
+  return {
+    id: `${moduleId}-notes`,
+    title: `${moduleName} — Summary Notes`,
+    content,
+    markdownContent: content,
+    tags: [moduleName, ...uniqueTopics.slice(0, 3)],
+    topic: moduleName,
+  };
 }
