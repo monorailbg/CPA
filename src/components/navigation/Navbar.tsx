@@ -1,9 +1,10 @@
 'use client';
 
-import { Sun, Moon, GraduationCap } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useTheme } from '@/lib/useTheme';
 import { WorkspaceTab, CPASection } from '@/lib/types';
+import AppIcon from '@/components/ui/AppIcon';
 
 const NAV_TABS: { id: WorkspaceTab; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -43,15 +44,7 @@ export default function Navbar() {
       >
         {/* Brand */}
         <div className="flex items-center gap-2.5">
-          <div
-            className="flex items-center justify-center w-8 h-8 rounded-lg"
-            style={{
-              backgroundColor: t.isDark ? '#22d3ee' : '#0f172a',
-              boxShadow: t.isDark ? '0 0 12px rgba(34,211,238,0.4)' : 'none',
-            }}
-          >
-            <GraduationCap size={16} style={{ color: t.isDark ? '#020617' : '#ffffff' }} />
-          </div>
+          <AppIcon size={28} variant={t.isDark ? 'ink' : 'primary'} />
           <div>
             <span className="text-sm font-bold tracking-tight" style={{ color: t.textPrimary }}>CPA</span>
             <span className="text-sm font-light ml-1" style={{ color: t.textTertiary }}>Exam Prep</span>
