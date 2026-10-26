@@ -117,13 +117,11 @@ export default function NotesView() {
   const selectedUnit = activeUnit ? units.find((u) => u.id === activeUnit) : undefined;
   const selectedModule = activeModule ? selectedUnit?.modules.find((m) => m.id === activeModule) : undefined;
   const [search, setSearch] = useState('');
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
 
-  // System state safeguard: switching modules clears any open note selection
-  // and search filter so the previous module's notes never bleed through.
   useEffect(() => {
-    setSelectedNote(null);
     setSearch('');
+    setActiveNoteId(null);
   }, [activeModule]);
 
   const sectionNotes = SECTION_NOTES[activeSection] ?? [];
@@ -139,8 +137,6 @@ export default function NotesView() {
       n.topic.toLowerCase().includes(search.toLowerCase()) ||
       n.tags.some((tg) => tg.toLowerCase().includes(search.toLowerCase()))
   );
-
-  const activeNote = selectedNote || filtered[0] || null;
 
   return (
     <div className="flex" style={{ minHeight: 'calc(100vh - 88px)' }}>
@@ -176,11 +172,14 @@ export default function NotesView() {
             </div>
           ) : (
             filtered.map((note) => {
-              const isActive = activeNote?.id === note.id;
+              const isActive = (activeNoteId ?? filtered[0]?.id) === note.id;
               return (
                 <button
                   key={note.id}
-                  onClick={() => setSelectedNote(note)}
+                  onClick={() => {
+                    setActiveNoteId(note.id);
+                    document.getElementById(`note-${note.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
                   className="w-full text-left p-3 rounded-xl transition-all duration-150 mb-1"
                   style={{
                     backgroundColor: isActive ? (t.isDark ? '#1e293b' : '#0f172a') : 'transparent',
@@ -222,42 +221,43 @@ export default function NotesView() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto" style={{ backgroundColor: t.canvas }}>
-        {activeNote ? (
-          <div className="max-w-3xl mx-auto p-8">
-            <div className="mb-6">
-              <div className="flex items-center gap-2 text-xs mb-2" style={{ color: t.textTertiary }}>
-                <span>{activeSection}</span>
-                <ChevronRight size={12} />
-                <span>{activeNote.topic}</span>
+        {filtered.length > 0 ? (
+          <div className="max-w-3xl mx-auto p-8 space-y-10">
+            {filtered.map((note) => (
+              <div key={note.id} id={`note-${note.id}`}>
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 text-xs mb-2" style={{ color: t.textTertiary }}>
+                    <span>{activeSection}</span>
+                    <ChevronRight size={12} />
+                    <span>{note.topic}</span>
+                  </div>
+                  <h1 className="text-2xl font-bold" style={{ color: t.textPrimary }}>{note.title}</h1>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {note.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs px-2.5 py-1 rounded-lg font-medium"
+                        style={{ backgroundColor: t.notes.bg, color: t.notes.text, border: `1px solid ${t.notes.border}` }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div
+                  className="rounded-2xl p-6"
+                  style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow }}
+                >
+                  <MarkdownRenderer content={note.content} />
+                </div>
               </div>
-              <h1 className="text-2xl font-bold" style={{ color: t.textPrimary }}>{activeNote.title}</h1>
-              <div className="flex flex-wrap gap-2 mt-3">
-                {activeNote.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-xs px-2.5 py-1 rounded-lg font-medium"
-                    style={{ backgroundColor: t.notes.bg, color: t.notes.text, border: `1px solid ${t.notes.border}` }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ borderTop: `1px solid ${t.divider}` }} className="mb-6" />
-
-            <div
-              className="rounded-2xl p-6"
-              style={{ backgroundColor: t.card, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow }}
-            >
-              <MarkdownRenderer content={activeNote.content} />
-            </div>
+            ))}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <FileText size={40} className="mb-4" style={{ color: t.textTertiary }} />
-            <h2 className="text-base font-semibold" style={{ color: t.textPrimary }}>Select a note to read</h2>
-            <p className="text-sm mt-1" style={{ color: t.textTertiary }}>Or generate new notes using the AI panel.</p>
+            <h2 className="text-base font-semibold" style={{ color: t.textPrimary }}>No notes found</h2>
+            <p className="text-sm mt-1" style={{ color: t.textTertiary }}>Try a different search or select a module.</p>
           </div>
         )}
       </div>
