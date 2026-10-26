@@ -41,13 +41,74 @@ function buildAuthenticModule(moduleId: string, order: number, seed: ModuleSeed,
     masteryLevel: 0,
     tags: content.conceptTags,
   }));
+  const rulesRows = content.conceptTags.map((t) =>
+    `| ${t} | Apply authoritative recognition and measurement criteria | Disclose per applicable standards |`
+  ).join('\n');
+  const stratContent =
+    `# ${content.title} — Exam Strategy\n\n` +
+    `## High-Yield Tips\n` +
+    `- Read each answer choice carefully — distractor options often describe the correct rule for a *different* topic.\n` +
+    `- When two choices look similar, the difference is usually in measurement timing or basis (cost vs. fair value).\n` +
+    `- For TBS: anchor to the specific ASC or regulation before computing amounts.\n\n` +
+    `## Key Topics (Priority Order)\n` +
+    content.conceptTags.map((t, i) => `${i + 1}. **${t}**`).join('\n');
+  const practiceContent =
+    `# ${content.title} — Practice Scenarios\n\n` +
+    content.conceptTags.map((t, i) =>
+      `### Scenario ${i + 1}: ${t}\n` +
+      `**Fact pattern**: A company must account for ${t}. Identify the applicable standard, determine the correct treatment, and describe required disclosures.\n\n` +
+      `**Key answer points**:\n` +
+      `- Apply the specific recognition and measurement criteria for ${t}.\n` +
+      `- Use the prescribed basis and classify/present correctly.\n` +
+      `- Provide all required note disclosures.`
+    ).join('\n\n');
   const notes: Note[] = [
     {
       id: `${moduleId}-notes`,
-      title: `${content.title} — Summary Notes`,
+      title: `Summary Notes — ${content.title}`,
       content: content.notesMarkdown,
       markdownContent: content.notesMarkdown,
       tags: content.conceptTags,
+      topic: content.title,
+    },
+    {
+      id: `${moduleId}-notes-rules`,
+      title: `Core Rules — ${content.title}`,
+      content:
+        `# Core Rules — ${content.title}\n\n` +
+        `## Recognition & Measurement Table\n\n` +
+        `| Topic | Recognition & Measurement | Key Disclosure |\n|---|---|---|\n` +
+        `${rulesRows}\n\n` +
+        `## Common Pitfalls\n` +
+        content.conceptTags.slice(0, 3).map((t) =>
+          `- **${t}**: Candidates frequently confuse the measurement basis or classification. Always anchor to the specific standard.`
+        ).join('\n'),
+      markdownContent:
+        `# Core Rules — ${content.title}\n\n` +
+        `## Recognition & Measurement Table\n\n` +
+        `| Topic | Recognition & Measurement | Key Disclosure |\n|---|---|---|\n` +
+        `${rulesRows}\n\n` +
+        `## Common Pitfalls\n` +
+        content.conceptTags.slice(0, 3).map((t) =>
+          `- **${t}**: Candidates frequently confuse the measurement basis or classification. Always anchor to the specific standard.`
+        ).join('\n'),
+      tags: [...content.conceptTags.slice(0, 3), 'rules'],
+      topic: content.title,
+    },
+    {
+      id: `${moduleId}-notes-strategy`,
+      title: `Exam Strategy — ${content.title}`,
+      content: stratContent,
+      markdownContent: stratContent,
+      tags: [...content.conceptTags.slice(0, 2), 'strategy', 'tips'],
+      topic: content.title,
+    },
+    {
+      id: `${moduleId}-notes-practice`,
+      title: `Practice Scenarios — ${content.title}`,
+      content: practiceContent,
+      markdownContent: practiceContent,
+      tags: [...content.conceptTags.slice(0, 2), 'practice', 'scenarios'],
       topic: content.title,
     },
   ];
@@ -109,7 +170,7 @@ function buildModule(unitId: string, order: number, seed: ModuleSeed): Module {
     mcqs,
     tbsItems: [],
     flashcards,
-    notes: [notes],
+    notes,
     blindSpots: [],
   };
 }

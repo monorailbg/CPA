@@ -5,6 +5,7 @@ import { FileText, Search, ChevronRight, BookMarked } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { useTheme } from '@/lib/useTheme';
 import { cpaDatabase } from '@/data/cpaDatabase';
+import { SECTION_NOTES } from '@/data/sectionNotes';
 import { Note } from '@/lib/types';
 
 function MarkdownRenderer({ content }: { content: string }) {
@@ -125,11 +126,12 @@ export default function NotesView() {
     setSearch('');
   }, [activeModule]);
 
+  const sectionNotes = SECTION_NOTES[activeSection] ?? [];
   const allNotes: Note[] = selectedModule
     ? selectedModule.notes
     : selectedUnit
-    ? selectedUnit.modules.flatMap((m) => m.notes)
-    : units.flatMap((u) => u.modules.flatMap((m) => m.notes));
+    ? [...sectionNotes, ...selectedUnit.modules.flatMap((m) => m.notes)]
+    : [...sectionNotes, ...units.flatMap((u) => u.modules.flatMap((m) => m.notes))];
   const filtered = allNotes.filter(
     (n) =>
       !search ||

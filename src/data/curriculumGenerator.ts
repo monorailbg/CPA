@@ -157,23 +157,76 @@ export function generateModuleNotes(
   description: string,
   topics: string[],
   objectives: string[],
-): Note {
-  const objectivesMd = objectives.map((o) => `- ${o}`).join('\n');
+): Note[] {
   const uniqueTopics = Array.from(new Set(topics));
+
+  // ── Note 1: Overview & Learning Objectives ──────────────────────────────
+  const objectivesMd = objectives.map((o) => `- ${o}`).join('\n');
   const conceptsMd = uniqueTopics.map((t) => `- **${t}**`).join('\n');
-  const outlineMd = uniqueTopics.map((t, i) => `${i + 1}. ${t}`).join('\n');
-  const content =
-    `# ${moduleName}\n\n` +
+  const overviewContent =
+    `# ${moduleName} — Overview\n\n` +
+    `## What This Module Covers\n${description}\n\n` +
     `## Learning Objectives\n${objectivesMd}\n\n` +
-    `## Key Concepts\n${conceptsMd}\n\n` +
-    `## Study Outline\n${outlineMd}\n\n` +
-    `## Summary\n${description} Mastery of this module requires applying the recognition, measurement, and disclosure rules across the topics above in both MCQ and task-based simulation formats.`;
-  return {
-    id: `${moduleId}-notes`,
-    title: `${moduleName} — Summary Notes`,
+    `## Key Concepts at a Glance\n${conceptsMd}`;
+
+  // ── Note 2: Core Rules & Recognition ────────────────────────────────────
+  const rulesRows = uniqueTopics.map((t) =>
+    `| ${t} | Recognize and measure per authoritative guidance | Disclose in accordance with applicable standards |`
+  ).join('\n');
+  const rulesContent =
+    `# ${moduleName} — Core Rules\n\n` +
+    `## Recognition & Measurement\n` +
+    `Each topic below is testable on the CPA exam. Focus on when an item is recognized, how it is initially and subsequently measured, and what disclosures are required.\n\n` +
+    `| Topic | Recognition & Measurement | Key Disclosure |\n` +
+    `|---|---|---|\n` +
+    `${rulesRows}\n\n` +
+    `## Common Exam Pitfalls\n` +
+    uniqueTopics.slice(0, 3).map((t) =>
+      `- **${t}**: Candidates frequently confuse the measurement basis or classification. Always anchor to the specific standard.`
+    ).join('\n');
+
+  // ── Note 3: Exam Strategies & Mnemonics ─────────────────────────────────
+  const outlineMd = uniqueTopics.map((t, i) => `${i + 1}. ${t}`).join('\n');
+  const stratContent =
+    `# ${moduleName} — Exam Strategy\n\n` +
+    `## Study Sequence\n` +
+    `Work through the topics in order. Each builds on the prior one.\n\n` +
+    `${outlineMd}\n\n` +
+    `## High-Yield Test-Taking Tips\n` +
+    `- Read each answer choice carefully — distractor options often describe the correct rule for a *different* topic.\n` +
+    `- When two choices look identical, the difference is usually in measurement timing (initial vs. subsequent) or the basis (cost vs. fair value).\n` +
+    `- For task-based simulations, identify the authoritative section number before computing amounts.\n\n` +
+    `## Summary\n` +
+    `${description} Prioritize topics ${uniqueTopics.slice(0, 2).map(t => `**${t}**`).join(' and ')} — they appear most frequently in both MCQ and TBS formats.`;
+
+  // ── Note 4: Practice Scenarios ───────────────────────────────────────────
+  const scenariosMd = uniqueTopics.map((t, i) =>
+    `### Scenario ${i + 1}: ${t}\n` +
+    `**Fact pattern**: A company must account for ${t}. Identify the applicable standard, determine the recognition and measurement requirements, and describe the required disclosures.\n\n` +
+    `**Key answer points**:\n` +
+    `- Apply the specific recognition criteria for ${t}.\n` +
+    `- Use the prescribed measurement basis (cost, fair value, or amortized cost as applicable).\n` +
+    `- Disclose all required information in the notes to the financial statements.`
+  ).join('\n\n');
+  const practiceContent =
+    `# ${moduleName} — Practice Scenarios\n\n` +
+    `## How to Use This Note\n` +
+    `For each scenario, try to answer before reading the key points. These mirror the style of CPA exam task-based simulations.\n\n` +
+    `${scenariosMd}`;
+
+  const build = (id: string, title: string, content: string, tags: string[]): Note => ({
+    id,
+    title,
     content,
     markdownContent: content,
-    tags: [moduleName, ...uniqueTopics.slice(0, 3)],
+    tags,
     topic: moduleName,
-  };
+  });
+
+  return [
+    build(`${moduleId}-notes-overview`, `Overview — ${moduleName}`, overviewContent, [moduleName, 'overview', ...uniqueTopics.slice(0, 2)]),
+    build(`${moduleId}-notes-rules`, `Core Rules — ${moduleName}`, rulesContent, [moduleName, 'rules', ...uniqueTopics.slice(0, 2)]),
+    build(`${moduleId}-notes-strategy`, `Exam Strategy — ${moduleName}`, stratContent, [moduleName, 'strategy', 'tips']),
+    build(`${moduleId}-notes-practice`, `Practice Scenarios — ${moduleName}`, practiceContent, [moduleName, 'practice', 'scenarios']),
+  ];
 }
