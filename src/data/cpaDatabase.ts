@@ -9,6 +9,7 @@ import {
 } from './curriculumGenerator';
 import { curriculumOutline, ModuleSeed, UnitSeedSpec } from './moduleSeeds';
 import { CPA_DATA_STORE } from './farF1ContentStore';
+import { MODULE_NOTES_CONTENT } from './moduleNotesContent';
 
 // ─── Authentic content adapter (FAR-F1 only) ───────────────────────────────
 // Converts the hand-authored CPA_DATA_STORE schema into the app's native
@@ -160,6 +161,11 @@ function buildModule(unitId: string, order: number, seed: ModuleSeed): Module {
   const flashcards = generateUnitFlashcards(moduleId, topics);
   const objectives = generateModuleObjectives(seed.name, seed.topics);
   const notes = generateModuleNotes(moduleId, seed.name, seed.description, seed.topics, objectives);
+  const realContent = MODULE_NOTES_CONTENT[moduleId];
+  if (realContent) {
+    notes[0].content = realContent;
+    notes[0].markdownContent = realContent;
+  }
   return {
     id: moduleId,
     name: seed.name,
