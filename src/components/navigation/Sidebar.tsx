@@ -56,7 +56,7 @@ export default function Sidebar() {
               <div key={unit.id} className="rounded-xl overflow-hidden">
                 {/* Unit header */}
                 <button
-                  onClick={() => setActiveUnit(isUnitActive ? undefined : unit.id)}
+                  onClick={() => { setActiveUnit(unit.id); if (!isUnitActive) setActiveModule(unit.modules[0]?.id); }}
                   className="relative w-full flex items-center gap-2.5 px-3 py-2.5 text-left spring-transition rounded-xl overflow-hidden"
                   style={{
                     backgroundColor: isUnitActive ? t.sidebarActiveBg : 'transparent',
@@ -117,7 +117,7 @@ export default function Sidebar() {
                       return (
                         <button
                           key={mod.id}
-                          onClick={() => setActiveModule(isModActive ? undefined : mod.id)}
+                          onClick={() => { setActiveUnit(unit.id); setActiveModule(mod.id); }}
                           className="relative w-full flex items-center gap-2 px-2.5 py-2 text-left rounded-lg spring-transition overflow-hidden"
                           style={{
                             backgroundColor: isModActive ? t.sidebarActiveBg : 'transparent',
